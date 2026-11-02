@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https://www.okx.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https://www.okx.com https://api.bybit.com https://api.kraken.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#07090c">
-<title>OKX Desk</title>
+<title>OKX Desk · multi-exchange signals</title>
 <script>
 (function () { try {
   const p = localStorage.getItem("okx_theme") || "auto";
@@ -80,6 +80,12 @@ html[data-theme="light"] .p-long{background:#e2f6ea;border-color:#a9e2c2}html[da
 html[data-theme="light"] .p-neutral{background:#e8ecf1;border-color:#d3dae3}
 html[data-theme="light"] .chip.on{background:#e3efff;border-color:#b5d0f3;color:#1a4f93}html[data-theme="light"] #toast{background:#e3efff;color:#1a4f93;border-color:#b5d0f3}
 html[data-theme="light"] .btn{color:#fff}html[data-theme="light"] .btn.ghost{color:var(--txt)}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem .6rem;margin:.6rem 0}.lgrid label{display:flex;flex-direction:column;font-size:.72rem;color:var(--mut);gap:.15rem}
+.lgrid .f,select.f{width:100%}select.f{font:inherit;font-size:.9rem;padding:.5rem;border-radius:.6rem;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
+@media (min-width:960px){.lgrid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:420px){nav.tabs button{font-size:.62rem}nav.tabs button svg{width:20px;height:20px}}
+.exsel{font:inherit;font-weight:800;font-size:.95rem;letter-spacing:.04em;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.2rem .3rem}
+header h1{margin-left:-.2rem}
 #theme{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:99px;font-size:.72rem;padding:.2rem .6rem;cursor:pointer}
 @media (min-width:960px){
   body{padding-bottom:0}
@@ -93,21 +99,25 @@ html[data-theme="light"] .btn{color:#fff}html[data-theme="light"] .btn.ghost{col
 </head>
 <body>
 <header>
-  <h1>OKX DESK</h1><span class="badge b-paper">SIGNALS · PAPER</span>
+  <select id="exSel" class="exsel" aria-label="Exchange"><option value="okx">OKX</option><option value="bybit">Bybit</option><option value="kraken">Kraken</option></select><h1>DESK</h1><span class="badge b-paper">SIGNALS · PAPER</span>
   <div class="upd" id="upd"></div>
   <button id="theme" title="Theme: Auto = light 22:00-07:00, dark in the day">Auto</button>
 </header>
 <div id="lock"></div>
 <nav class="tabs" id="tabs" style="display:none">
   <button data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Day</button>
+  <button data-v="an"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Analyze</button>
   <button data-v="swing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12c3-6 6-6 9 0s6 6 9 0"/></svg>Swing</button>
   <button data-v="perp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V3M5 10l7-7 7 7"/></svg>Contracts</button>
   <button data-v="port"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Portfolio</button>
+  <button data-v="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Log</button>
   <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
 </nav>
 <main id="app" style="display:none">
   <section class="view" id="v-day"></section>
+  <section class="view" id="v-an"></section>
   <section class="view" id="v-swing"></section>
+  <section class="view" id="v-log"></section>
   <section class="view" id="v-perp"></section>
   <section class="view" id="v-port"></section>
   <section class="view" id="v-set"></section>
@@ -159,14 +169,14 @@ function entryAt(c, ind, j) {
     && k[4] > ind.e20[j] && k[4] > k[1];
 }
 function levels(c, ind, j, p) { const e = c[j][4], a = ind.atr[j]; return {entry: e, sl: e - p.sl * a, tp: e + p.tp * a, rr: p.tp / p.sl, atr: a}; }
-function fundingBetween(funding, t0, t1) {
+function fundingBetween(funding, t0, t1, period = 28800000) {
   if (!funding || !funding.length) return 0;
   let s = 0; for (const [t, r] of funding) if (t0 < t && t <= t1) s += r;
   const first = funding[0][0];
-  if (t0 < first) { const avg = funding.reduce((a, x) => a + x[1], 0) / funding.length; s += avg * Math.floor((Math.min(t1, first) - t0) / 28800000); }
+  if (t0 < first) { const avg = funding.reduce((a, x) => a + x[1], 0) / funding.length; s += avg * Math.floor((Math.min(t1, first) - t0) / period); }
   return s;
 }
-function backtest(c, tf, gate, p, fee, funding) {
+function backtest(c, tf, gate, p, fee, funding, fperiod = 28800000) {
   const ind = indicators(c), trades = [], n = c.length, tfm = TF_MS[tf]; let j = WARMUP;
   while (j < n) {
     const tClose = c[j][0] + tfm;
@@ -180,7 +190,7 @@ function backtest(c, tf, gate, p, fee, funding) {
       }
       if (!out) break;
       const gross = (ex / lv.entry - 1) * 100;
-      const fund = funding != null ? fundingBetween(funding, tClose, c[k][0] + tfm) * 100 : 0;
+      const fund = funding != null ? fundingBetween(funding, tClose, c[k][0] + tfm, fperiod) * 100 : 0;
       const net = gross - 2 * fee * 100 - fund, risk = (lv.entry - lv.sl) / lv.entry * 100;
       trades.push({t: tClose, entry: lv.entry, exit: ex, out, gross, fund, net, r: net / risk, bars: k - j});
       j = k + 1; continue;
@@ -207,8 +217,8 @@ function latestSignal(c, tf, gate, p) {
   return null;
 }
 function liquidation(entry, lev, mmr) { const liq = entry * (1 - 1 / lev + mmr); return {price: liq, dist_pct: (1 - liq / entry) * 100}; }
-function aggregate(c5, tf, nowMs) {
-  const size = TF_MS[tf], need = size / 300000, out = []; let cur = null; nowMs = nowMs || Date.now();
+function aggregate(c5, tf, nowMs, srcTf) {
+  const size = TF_MS[tf], need = size / TF_MS[srcTf || "5m"], out = []; let cur = null; nowMs = nowMs || Date.now();
   const done = x => x && x[6] === need && x[0] + size <= nowMs;
   for (const k of c5) {
     const b = Math.floor(k[0] / size) * size;
@@ -220,40 +230,6 @@ function aggregate(c5, tf, nowMs) {
 }
 // ==/STRATEGY==
 
-// ---------- exchange adapters (public data only; Bybit/Kraken can be added with the same methods) ----------
-const OKX_API = "https://www.okx.com/api/v5";
-let lastReq = 0, reqCount = 0;
-async function okxGet(path) {
-  const wait = lastReq + 200 - Date.now(); lastReq = Math.max(Date.now(), lastReq + 200);   // <= 5 req/s
-  if (wait > 0) await new Promise(r => setTimeout(r, wait));
-  reqCount++;
-  const r = await fetch(OKX_API + path, {cache: "no-store"});
-  if (!r.ok) throw new Error("OKX HTTP " + r.status);
-  const j = await r.json();
-  if (j.code !== "0") throw new Error("OKX " + j.code + (j.msg ? ": " + j.msg : ""));
-  return j.data;
-}
-const CC = {};   // candle cache: "inst|bar" -> rows (closed only, oldest first)
-const EX = {
-  okx: {
-    async candles(inst, bar) {
-      if (bar === "10m" || bar === "20m") return aggregate(await EX.okx.candles(inst, "5m"), bar);
-      const key = inst + "|" + bar, have = CC[key], b = {"1D": "1Dutc", "1W": "1Wutc"}[bar] || bar;
-      if (have && have.length && Date.now() < have[have.length - 1][0] + 2 * TF_MS[bar]) return have;
-      const lim = have && have.length ? Math.min(300, Math.floor((Date.now() - have[have.length - 1][0]) / TF_MS[bar]) + 2) : 300;
-      const d = await okxGet(`/market/candles?instId=${inst}&bar=${b}&limit=${lim}`);
-      const rows = d.filter(r => r[8] === "1").map(r => [+r[0], +r[1], +r[2], +r[3], +r[4], +r[5]]).reverse();
-      const m = new Map((have || []).map(r => [r[0], r])); rows.forEach(r => m.set(r[0], r));
-      return CC[key] = [...m.values()].sort((a, b) => a[0] - b[0]).slice(-300);
-    },
-    async ticker(inst) { const d = (await okxGet(`/market/ticker?instId=${inst}`))[0]; return {last: +d.last, open24h: +d.open24h, ts: +d.ts}; },
-    async funding(inst) { const d = await okxGet(`/public/funding-rate-history?instId=${inst}&limit=100`); return d.map(x => [+x.fundingTime, +(x.realizedRate || x.fundingRate)]).sort((a, b) => a[0] - b[0]); },
-    async fundingNow(inst) { const d = (await okxGet(`/public/funding-rate?instId=${inst}`))[0]; return {rate: +d.fundingRate, next: +d.fundingTime}; },
-    async mmr(family) { const d = await okxGet(`/public/position-tiers?instType=SWAP&tdMode=isolated&instFamily=${family}&tier=1`); return d.length ? +d[0].mmr : 0.01; },
-    swapId: pair => pair + "-SWAP"
-  }
-};
-const X = EX.okx;
 
 // ---------- helpers ----------
 const $ = id => document.getElementById(id);
@@ -268,10 +244,9 @@ const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 function toast(m) { const t = $("toast"); t.textContent = m; t.style.display = "block"; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = "none", 6000); }
 const b64uEnc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const b64uDec = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
-const PAIR_RE = /^[A-Z0-9]{2,12}-USDT$/;
 const DAY_TFS = ["1m", "2m", "5m", "10m", "15m", "20m", "30m"];
-const DEF_WATCH = ["BTC-USDT", "ETH-USDT", "SOL-USDT", "XRP-USDT", "DOGE-USDT", "LINK-USDT"];
-const SPOT_FEE = 0.001, PERP_FEE = 0.0005, MAX_LEV = 3;
+const DEF_WATCH = ["BTC", "ETH", "SOL", "XRP", "DOGE", "LINK"];
+const MAX_LEV = 3;
 const biasPill = b => b === "long" ? `<span class="pill p-long">LONG</span>` : b === "short" ? `<span class="pill p-short">SHORT · AVOID</span>` : `<span class="pill p-neutral">NEUTRAL</span>`;
 
 // ---------- password lock (PBKDF2-SHA256 600k; only a salted hash is stored, never the password) ----------
@@ -285,11 +260,12 @@ async function derive(pw, salt, iter) {
 async function aesKey(raw) { return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]); }
 function sameBytes(a, b) { if (a.length !== b.length) return false; let x = 0; for (let i = 0; i < a.length; i++) x |= a[i] ^ b[i]; return x === 0; }
 function keepSession(raw) { sessionStorage.setItem("okx_s", JSON.stringify({k: b64uEnc(raw), until: Date.now() + SESSION_H * 3600e3})); }
-async function setPassword(pw, keepHoldings) {
+async function setPassword(pw, keepHoldings, keepLog) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), d = await derive(pw, salt, ITER);
   lsSet("okx_auth", {v: 1, salt: b64uEnc(salt), iter: ITER, ver: b64uEnc(d.verifier)});
   vaultKey = await aesKey(d.keyRaw); keepSession(d.keyRaw);
   await saveHoldings(keepHoldings || []);
+  await saveLog(keepLog || []);                    // logbook re-encrypted with the new key too
 }
 async function checkPassword(pw) {
   const a = ls("okx_auth"), d = await derive(pw, b64uDec(a.salt), a.iter);
@@ -313,6 +289,114 @@ async function saveHoldings(h) {
   lsSet("okx_vault", {iv: b64uEnc(iv), ct: b64uEnc(ct)});
 }
 // reset link: #reset=<payload>.<sig>, ECDSA P-256 signed on the box, 30 min, one use per device
+// ---------- logbook core (Mike's own trades; encrypted on this device with the same key as holdings) ----------
+const LOG_KEY = "okx_log";
+async function sealJSON(name, obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name: "AES-GCM", iv}, vaultKey, new TextEncoder().encode(JSON.stringify(obj)));
+  lsSet(name, {iv: b64uEnc(iv), ct: b64uEnc(ct)});
+}
+async function openJSON(name, dflt) {
+  const v = ls(name); if (!v || !vaultKey) return dflt;
+  try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name: "AES-GCM", iv: b64uDec(v.iv)}, vaultKey, b64uDec(v.ct)))); } catch (e) { return null; }
+}
+async function loadLog() { const l = await openJSON(LOG_KEY, []); return Array.isArray(l) ? l : []; }
+async function saveLog(l) { await sealJSON(LOG_KEY, l); }
+// Amsterdam wall-clock <-> epoch ms (whatever time zone the phone is set to)
+function amsParts(ms) { const o = {}; new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(ms)).forEach(p => o[p.type] = p.value); return o; }
+function msToAms(ms) { const p = amsParts(ms); return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`; }
+function amsToMs(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(s || "").trim()); if (!m) return null;
+  const wall = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+  let ms = wall;
+  for (let i = 0; i < 3; i++) { const p = amsParts(ms), seen = Date.UTC(+p.year, p.month - 1, +p.day, +p.hour, +p.minute); ms += wall - seen; }
+  return ms;
+}
+// P/L: amount in the pair's quote currency, % on the capital used (margin for contracts), R = P/L / planned risk at the stop
+function tradeCalc(t, feeRate) {
+  const dir = t.side === "short" ? -1 : 1, lev = t.market === "perp" ? (t.lev || 1) : 1;
+  const out = {open: t.exit == null || t.exit === "", feesEst: false};
+  let fees = t.fees;
+  if (fees == null || fees === "") { fees = feeRate ? (t.entry * t.size + (out.open ? 0 : t.exit * t.size)) * feeRate : 0; out.feesEst = !!feeRate; }
+  out.fees = +fees;
+  out.risk = t.sl ? Math.abs(t.entry - t.sl) * t.size : null;
+  out.capital = t.entry * t.size / lev;
+  if (t.sl && t.tp) out.plannedRR = Math.abs(t.tp - t.entry) / Math.abs(t.entry - t.sl);
+  if (out.open) return out;
+  out.gross = (t.exit - t.entry) * t.size * dir;
+  out.pnl = out.gross - out.fees;
+  out.pct = out.pnl / out.capital * 100;
+  out.r = out.risk ? out.pnl / out.risk : null;
+  return out;
+}
+function logStats(rows) {     // rows: [{t, c}] closed only
+  const n = rows.length; if (!n) return {n: 0};
+  const rs = rows.filter(x => x.c.r != null), wins = rows.filter(x => x.c.pnl > 0).length;
+  const by = (a, b) => a.c.pnl - b.c.pnl, s = rows.slice().sort(by);
+  return {n, win: wins / n * 100, pnl: rows.reduce((a, x) => a + x.c.pnl, 0), fees: rows.reduce((a, x) => a + x.c.fees, 0),
+    avgR: rs.length ? rs.reduce((a, x) => a + x.c.r, 0) / rs.length : null, nR: rs.length, best: s[n - 1], worst: s[0],
+    avgPct: rows.reduce((a, x) => a + x.c.pct, 0) / n};
+}
+const LOG_COLS = ["id", "open_time_ams", "close_time_ams", "exchange", "pair", "market", "leverage", "side", "entry", "exit", "size", "fees", "stop_loss", "take_profit", "setup", "signal", "notes"];
+const csvCell = v => { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) || /^[=+\-@]/.test(v) && isNaN(+v) ? '"' + (/^[=+\-@]/.test(v) && isNaN(+v) ? "'" : "") + v.replace(/"/g, '""') + '"' : v; };
+function logToCsv(list, feeOf) {
+  const head = [...LOG_COLS, "pnl", "pnl_pct", "r_multiple"];
+  const lines = list.map(t => { const c = tradeCalc(t, feeOf ? feeOf(t) : 0);
+    return [t.id, msToAms(t.t), t.tc ? msToAms(t.tc) : "", t.ex, t.pair, t.market, t.market === "perp" ? t.lev : "", t.side, t.entry, t.exit ?? "", t.size, t.fees ?? "", t.sl ?? "", t.tp ?? "", t.setup || "", t.signal || "", t.notes || "",
+      c.open ? "" : c.pnl.toFixed(8), c.open ? "" : c.pct.toFixed(4), c.r == null ? "" : c.r.toFixed(4)].map(csvCell).join(","); });
+  return [head.join(","), ...lines].join("\r\n") + "\r\n";
+}
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === ",") { row.push(cell); cell = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += ch;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x !== ""));
+}
+const LOG_EX = ["okx", "bybit", "kraken"], LOG_SETUPS = ["1m", "2m", "5m", "10m", "15m", "20m", "30m", "1H", "4H swing", "1D", "contract 30m", "contract 4H", "manual"];
+function validTrade(d) {     // returns a clean trade or throws a readable error
+  const num = (v, name, opt) => { if (v === "" || v == null) { if (opt) return null; throw new Error(name + " is required"); } const x = +v; if (!isFinite(x) || x <= 0) throw new Error(name + " must be a number above 0"); return x; };
+  const t = {id: d.id || ("t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6))};
+  t.t = typeof d.t === "number" ? d.t : amsToMs(d.t); if (!t.t) throw new Error("Open date/time like 2026-11-02 14:30");
+  t.tc = d.tc ? (typeof d.tc === "number" ? d.tc : amsToMs(d.tc)) : null;
+  t.ex = String(d.ex || "").toLowerCase(); if (!LOG_EX.includes(t.ex)) throw new Error("Exchange: okx, bybit or kraken");
+  t.pair = String(d.pair || "").trim().toUpperCase().replace(/[-\/](USDT|USD|USDC|EUR)$/, ""); t.pair = ({XBT: "BTC", XDG: "DOGE"})[t.pair] || t.pair;
+  if (!/^[A-Z0-9]{2,15}$/.test(t.pair)) throw new Error("Coin like BTC");
+  t.market = d.market === "perp" || d.market === "contract" ? "perp" : "spot";
+  t.side = d.side === "short" ? "short" : "long";
+  if (t.market === "spot" && t.side === "short") throw new Error("Spot can't be shorted: pick Contract for a short");
+  t.lev = t.market === "perp" ? num(d.lev || 1, "Leverage") : null; if (t.lev && t.lev > 100) throw new Error("Leverage up to 100");
+  t.entry = num(d.entry, "Entry"); t.exit = num(d.exit, "Exit", true); t.size = num(d.size, "Size");
+  t.fees = d.fees === "" || d.fees == null ? null : +d.fees; if (t.fees != null && !(t.fees >= 0)) throw new Error("Fees must be 0 or more");
+  t.sl = num(d.sl, "Stop-loss", true); t.tp = num(d.tp, "Take-profit", true);
+  if (t.exit != null && !t.tc) t.tc = t.t;
+  t.setup = LOG_SETUPS.includes(d.setup) ? d.setup : "manual";
+  t.signal = String(d.signal || "").slice(0, 120); t.notes = String(d.notes || "").slice(0, 1000);
+  return t;
+}
+function csvToTrades(text) {
+  const rows = parseCsv(text); if (!rows.length) throw new Error("empty file");
+  const h = rows[0].map(x => x.trim()); if (!LOG_COLS.every(c => h.includes(c))) throw new Error("not an OKX Desk logbook CSV");
+  const ix = c => h.indexOf(c), ok = [], bad = [];
+  rows.slice(1).forEach((r, i) => { const g = c => { const v = r[ix(c)] ?? ""; return v.startsWith("'") && /^'[=+\-@]/.test(v) ? v.slice(1) : v; };
+    try { ok.push(validTrade({id: g("id"), t: g("open_time_ams"), tc: g("close_time_ams") || null, ex: g("exchange"), pair: g("pair"), market: g("market"), lev: g("leverage"), side: g("side"),
+      entry: g("entry"), exit: g("exit"), size: g("size"), fees: g("fees"), sl: g("stop_loss"), tp: g("take_profit"), setup: g("setup"), signal: g("signal"), notes: g("notes")})); }
+    catch (e) { bad.push(`row ${i + 2}: ${e.message}`); } });
+  return {ok, bad};
+}
+function holdingsAfter(holdings, t, closing) {   // spot long only: buying adds (avg price), closing sells the size
+  if (t.market !== "spot" || t.side !== "long") return holdings;
+  const h = holdings.map(x => ({...x})), i = h.findIndex(x => x.coin === t.pair);
+  if (!closing) { if (i < 0) h.push({coin: t.pair, amount: t.size, price: t.entry}); else { const a = h[i].amount + t.size; h[i].price = (h[i].price * h[i].amount + t.entry * t.size) / a; h[i].amount = a; } return h; }
+  if (i < 0) return h;
+  h[i].amount = +(h[i].amount - t.size).toFixed(12); return h[i].amount > 1e-12 ? h : h.filter((_, k) => k !== i);
+}
+
 async function verifyReset(frag, pubB64u, now, used) {
   const [p, s] = frag.split("."); if (!p || !s || !pubB64u) return {err: "This reset link is not valid."};
   const key = await crypto.subtle.importKey("raw", b64uDec(pubB64u), {name: "ECDSA", namedCurve: "P-256"}, false, ["verify"]);
@@ -349,7 +433,7 @@ function lockScreen(mode, msg) {
     if (pw.length < 10) return err("Use at least 10 characters.");
     if (pw !== $("pw2").value) return err("The two passwords don't match.");
     err("Saving…");
-    if (mode === "reset") { const u = ls("okx_used_resets", []); u.push(lockScreen.nonce); lsSet("okx_used_resets", u.slice(-50)); localStorage.removeItem("okx_vault"); }
+    if (mode === "reset") { const u = ls("okx_used_resets", []); u.push(lockScreen.nonce); lsSet("okx_used_resets", u.slice(-50)); localStorage.removeItem("okx_vault"); localStorage.removeItem("okx_log"); }
     await setPassword(pw, []); lsSet("okx_fail", {n: 0, until: 0}); L.style.display = "none"; start();
   };
   $("pwGo").onclick = go;
@@ -357,59 +441,202 @@ function lockScreen(mode, msg) {
   $("pw1").focus();
 }
 
+// ---------- exchange adapters: PUBLIC market data only (no keys, no account, no order calls) ----------
+// Each adapter: candles(inst, bar, perp) -> closed candles oldest first; tickers(insts); funding/fundingNow/mmr
+// for perps; spotId/perpId map a coin (BTC) to the exchange's own id. Missing timeframes are built
+// (2m from 1m, 10m/20m from 5m). Coin lists come from the box (data/markets.json) or the exchange itself.
+const BUILT = {"2m": "1m", "10m": "5m", "20m": "5m"};
+let reqCount = 0;
+function mkGet(label, gapMs, check) {
+  let last = 0;
+  return async function (url) {
+    const wait = last + gapMs - Date.now(); last = Math.max(Date.now(), last + gapMs);
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    reqCount++;
+    let r; try { r = await fetch(url, {cache: "no-store"}); } catch (e) { throw new Error(label + " unreachable (network or blocked in your region)"); }
+    if (!r.ok) throw new Error(label + " HTTP " + r.status + (r.status === 403 ? " (blocked in this region?)" : ""));
+    return check(await r.json());
+  };
+}
+function mkCandles(ex, nativeSet, fetchRows) {
+  const CC = {};
+  return async function candles(inst, bar, perp) {
+    if (!nativeSet.has(bar)) {
+      const src = BUILT[bar]; if (!src) throw new Error(ex.label + " has no " + bar + " candles");
+      return aggregate(await candles(inst, src, perp), bar, Date.now(), src).slice(-300);
+    }
+    const key = (perp ? "P|" : "S|") + inst + "|" + bar, have = CC[key], now = Date.now();
+    if (have && have.length && now < have[have.length - 1][0] + 2 * TF_MS[bar]) return have;
+    const rows = await fetchRows(inst, bar, perp, have && have.length ? have[have.length - 1][0] : null);
+    const m = new Map((have || []).map(r => [r[0], r])); rows.forEach(r => m.set(r[0], r));
+    return CC[key] = [...m.values()].filter(r => r[0] + TF_MS[bar] <= now).sort((a, b) => a[0] - b[0]).slice(-300);
+  };
+}
+const MK = {};   // coin lists: {okx: {spot: {BTC: "BTC-USDT"}, perp: {...}}, ...}
+async function loadMarkets(name) {
+  const c = ls("okx_mk_" + name);
+  if (c && Date.now() - c.at < 86400000 && c.spot) return MK[name] = c;
+  try {
+    const r = await fetch(`data/markets.json?d=${new Date().toISOString().slice(0, 10)}`);
+    if (r.ok) { const j = await r.json(); if (j[name] && j[name].spot) { MK[name] = {at: Date.now(), spot: j[name].spot, perp: j[name].perp || {}}; lsSet("okx_mk_" + name, MK[name]); return MK[name]; } }
+  } catch (e) {}
+  const d = await EX[name].listings();               // fallback: ask the exchange itself
+  MK[name] = {at: Date.now(), ...d}; try { lsSet("okx_mk_" + name, MK[name]); } catch (e) {}
+  return MK[name];
+}
+const okxGet = mkGet("OKX", 200, j => { if (j.code !== "0") throw new Error("OKX " + j.code + (j.msg ? ": " + j.msg : "")); return j.data; });
+const bybitGet = mkGet("Bybit", 120, j => { if (j.retCode !== 0) throw new Error("Bybit " + j.retCode + ": " + j.retMsg); return j.result; });
+const krakenGet = mkGet("Kraken", 700, j => { if (j.error && j.error.length) throw new Error("Kraken: " + j.error.join("; ")); return j.result; });
+const ALL_TF = new Set(["1m", "5m", "15m", "30m", "1H", "4H", "1D", "1W"]);
+const EX = {
+  okx: {name: "okx", label: "OKX", quote: "USDT", fees: {spot: 0.001, perp: 0.0005},
+    feeNote: "Regular tier: spot taker 0.10%, perpetual taker 0.05%", feeSrc: "https://www.okx.com/fees",
+    perpInBrowser: true, perpName: "USDT perpetual swap", demo: "OKX Demo trading",
+    async tickers(insts) { return Promise.all(insts.map(i => okxGet(`https://www.okx.com/api/v5/market/ticker?instId=${i}`).then(d => ({last: +d[0].last, open: +d[0].open24h, openLabel: "24h"})).catch(e => ({err: e.message})))); },
+    async funding(id) { const d = await okxGet(`https://www.okx.com/api/v5/public/funding-rate-history?instId=${id}&limit=100`); return d.map(x => [+x.fundingTime, +(x.realizedRate || x.fundingRate)]).sort((a, b) => a[0] - b[0]); },
+    async fundingNow(id) { const d = (await okxGet(`https://www.okx.com/api/v5/public/funding-rate?instId=${id}`))[0]; return {rate: +d.fundingRate, next: +d.fundingTime, periodH: 8}; },
+    async mmr(coin) { const d = await okxGet(`https://www.okx.com/api/v5/public/position-tiers?instType=SWAP&tdMode=isolated&instFamily=${coin}-USDT&tier=1`); return d.length ? +d[0].mmr : 0.01; },
+    async listings() {
+      const [s, p] = await Promise.all([okxGet("https://www.okx.com/api/v5/market/tickers?instType=SPOT"), okxGet("https://www.okx.com/api/v5/market/tickers?instType=SWAP")]);
+      const spot = {}, perp = {}; s.forEach(x => { const [b, q] = x.instId.split("-"); if (q === "USDT") spot[b] = x.instId; });
+      p.forEach(x => { const [b, q] = x.instId.split("-"); if (q === "USDT") perp[b] = x.instId; }); return {spot, perp};
+    }},
+  bybit: {name: "bybit", label: "Bybit", quote: "USDT", fees: {spot: 0.001, perp: 0.00055},
+    feeNote: "VIP 0: spot taker 0.10%, perpetual taker 0.055%", feeSrc: "https://www.bybit.com/en/help-center/article/Trading-Fee-Structure",
+    perpInBrowser: true, perpName: "USDT perpetual", demo: "Bybit Demo Trading",
+    async tickers(insts) { return Promise.all(insts.map(i => bybitGet(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${i}`).then(d => ({last: +d.list[0].lastPrice, open: +d.list[0].prevPrice24h, openLabel: "24h"})).catch(e => ({err: e.message})))); },
+    async funding(id) { const d = await bybitGet(`https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${id}&limit=200`); return d.list.map(x => [+x.fundingRateTimestamp, +x.fundingRate]).sort((a, b) => a[0] - b[0]); },
+    async fundingNow(id) { const d = (await bybitGet(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${id}`)).list[0]; return {rate: +d.fundingRate, next: +d.nextFundingTime, periodH: +d.fundingIntervalHour || 8}; },
+    async mmr(coin) { const d = await bybitGet(`https://api.bybit.com/v5/market/risk-limit?category=linear&symbol=${EX.bybit.perpId(coin)}`); return d.list.length ? +d.list[0].maintenanceMargin : 0.01; },
+    async listings() {
+      const [s, p] = await Promise.all([bybitGet("https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000"), bybitGet("https://api.bybit.com/v5/market/tickers?category=linear")]);
+      const spot = {}, perp = {}; s.list.forEach(x => { if (x.quoteCoin === "USDT" && x.status === "Trading") spot[x.baseCoin] = x.symbol; });
+      p.list.forEach(x => { if (x.symbol.endsWith("USDT")) perp[x.symbol.slice(0, -4)] = x.symbol; }); return {spot, perp};
+    }},
+  kraken: {name: "kraken", label: "Kraken", quote: "USD", fees: {spot: 0.008, perp: 0.0005},
+    feeNote: "Kraken Pro tier 1: spot taker 0.80%, futures taker 0.05%", feeSrc: "https://www.kraken.com/pro/fees",
+    perpInBrowser: false, perpName: "Futures perpetual (PF_)", demo: "Kraken Futures demo (no spot demo)",
+    async tickers(insts) {
+      if (!insts.length) return [];
+      try { const d = await krakenGet(`https://api.kraken.com/0/public/Ticker?pair=${insts.join(",")}`);
+        return insts.map(i => d[i] ? {last: +d[i].c[0], open: +d[i].o, openLabel: "today UTC"} : {err: "no Kraken ticker"}); }
+      catch (e) { return insts.map(() => ({err: e.message})); }
+    },
+    async listings() {
+      const s = await krakenGet("https://api.kraken.com/0/public/AssetPairs"), spot = {}, A = {XBT: "BTC", XDG: "DOGE"};
+      Object.entries(s).forEach(([k, v]) => { const w = v.wsname || ""; if (w.endsWith("/USD") && (v.status || "online") === "online") { const b = w.split("/")[0]; spot[A[b] || b] = k; } });
+      return {spot, perp: {}};   // Kraken Futures has no CORS: the perp list comes from the box (markets.json)
+    }}
+};
+EX.okx.candles = mkCandles(EX.okx, new Set(["1m", "2m", ...ALL_TF]), async (inst, bar, perp, since) => {
+  const lim = since ? Math.min(300, Math.floor((Date.now() - since) / TF_MS[bar]) + 2) : 300;
+  const d = await okxGet(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${({"1D": "1Dutc", "1W": "1Wutc"})[bar] || bar}&limit=${lim}`);
+  return d.filter(r => r[8] === "1").map(r => [+r[0], +r[1], +r[2], +r[3], +r[4], +r[5]]);
+});
+const BYBIT_IV = {"1m": "1", "5m": "5", "15m": "15", "30m": "30", "1H": "60", "4H": "240", "1D": "D", "1W": "W"};
+EX.bybit.candles = mkCandles(EX.bybit, ALL_TF, async (inst, bar, perp, since) => {
+  const lim = since ? Math.min(300, Math.floor((Date.now() - since) / TF_MS[bar]) + 2) : 300;
+  const d = await bybitGet(`https://api.bybit.com/v5/market/kline?category=${perp ? "linear" : "spot"}&symbol=${inst}&interval=${BYBIT_IV[bar]}&limit=${lim}`);
+  return d.list.map(r => [+r[0], +r[1], +r[2], +r[3], +r[4], +r[5]]);
+});
+const KRAKEN_IV = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "1H": 60, "4H": 240, "1D": 1440, "1W": 10080};
+EX.kraken.candles = mkCandles(EX.kraken, ALL_TF, async (inst, bar, perp, since) => {
+  if (perp) throw new Error("Kraken Futures can't be read from a browser (no CORS)");
+  const d = await krakenGet(`https://api.kraken.com/0/public/OHLC?pair=${inst}&interval=${KRAKEN_IV[bar]}${since ? "&since=" + Math.floor(since / 1000 - 1) : ""}`);
+  const k = Object.keys(d).find(x => x !== "last");
+  return (d[k] || []).map(r => [r[0] * 1000, +r[1], +r[2], +r[3], +r[4], +r[6]]);
+});
+for (const e of Object.values(EX)) {
+  e.spotId = coin => (MK[e.name] && MK[e.name].spot[coin]) || null;
+  e.perpId = coin => (MK[e.name] && MK[e.name].perp && MK[e.name].perp[coin]) || null;
+  e.ticker = async inst => { const t = (await e.tickers([inst]))[0]; if (t.err) throw new Error(t.err); return t; };
+}
+const EX_NAMES = ["okx", "bybit", "kraken"];
+let exName = ls("okx_ex", "okx"); if (!EX[exName]) exName = "okx";
+let X = EX[exName];
+
 // ---------- state ----------
-let watch = ls("okx_watch", DEF_WATCH).filter(p => PAIR_RE.test(p)); if (!watch.length) watch = DEF_WATCH.slice();
+const normCoin = p => { const m = /^([A-Z0-9]{2,12})(-USDT)?$/.exec(String(p || "").trim().toUpperCase()); return m ? ({XBT: "BTC", XDG: "DOGE"})[m[1]] || m[1] : null; };
+let watch = [...new Set(ls("okx_watch", DEF_WATCH).map(normCoin).filter(Boolean))]; if (!watch.length) watch = DEF_WATCH.slice();
 let pushTfs = ls("okx_push_tfs", ["5m", "10m", "15m", "20m", "30m"]);
 let pushSwing = ls("okx_push_swing", true), pushPerp = ls("okx_push_perp", true);
 let inAppTfs = ls("okx_inapp_tfs", ["5m", "10m", "15m", "20m", "30m"]), sound = ls("okx_sound", true);
-let sel = ls("okx_sel", watch[0]); if (!watch.includes(sel)) sel = watch[0];
+let sel = normCoin(ls("okx_sel", watch[0])); if (!watch.includes(sel)) sel = watch[0];
 let lev = ls("okx_lev", 2); if (![1, 2, 3].includes(lev)) lev = 2;
 let view = ls("okx_view", "day");
-const S = {tick: {}, bias: {}, h1: {}, sigs: [], sel: {}, swing: {}, perp: {}, port: {}, feed: null, err: {}, at: 0, swAt: 0};
+const freshState = () => ({tick: {}, bias: {}, h1: {}, sigs: [], sel: {}, swing: {}, perp: {}, port: {}, err: {}, swAt: 0});
+const S = Object.assign(freshState(), {feed: null, at: 0});
 let holdings = [];
 let seen = new Set(ls("okx_seen", [])), firstPass = true;
+const listed = () => watch.filter(c => X.spotId(c));               // watchlist coins this exchange lists
+const unlisted = () => watch.filter(c => !X.spotId(c));
+const kperp = coin => { const k = S.feed && S.feed.kraken_perp; return k && k.coins ? k.coins[coin] || null : null; };
+const hasPerp = coin => X.perpInBrowser ? !!X.perpId(coin) : !!kperp(coin);
+async function setExchange(n) {
+  if (!EX[n] || n === exName) return;
+  exName = n; X = EX[n]; lsSet("okx_ex", n); Object.assign(S, freshState()); firstPass = true;
+  document.querySelectorAll("[data-ex]").forEach(b => b.classList.toggle("on", b.dataset.ex === n));
+  $("exSel").value = n; $("upd").textContent = "Loading…";
+  try { await loadMarkets(n); } catch (e) { S.err.day = "couldn't load the " + X.label + " coin list: " + e.message; }
+  if (!X.spotId(sel)) sel = listed()[0] || sel;
+  if (pushCode) refreshCode();
+  RENDER[view](); refresh(true);
+}
 
 // ---------- data loads (each view loads only what it shows) ----------
 async function loadDay() {
-  const ticks = await Promise.all(watch.map(p => X.ticker(p).catch(e => ({err: e.message}))));
-  watch.forEach((p, i) => S.tick[p] = ticks[i]);
-  for (const p of watch) { const c = await X.candles(p, "1H"); S.h1[p] = c; S.bias[p] = biasDetail(c, "1H"); }
+  const coins = listed(), ticks = await X.tickers(coins.map(X.spotId));
+  coins.forEach((c, i) => S.tick[c] = ticks[i]);
+  for (const c of coins) { const h = await X.candles(X.spotId(c), "1H"); S.h1[c] = h; S.bias[c] = biasDetail(h, "1H"); }
   const sigs = [];
-  // entries can only happen under a LONG 1H direction, so only those pairs (plus the selected one) are scanned
-  for (const p of watch.filter(p => S.bias[p].bias === "long" || p === sel)) {
-    const gate = gateFn(S.h1[p], "1H"), rows = [];
+  // entries can only happen under a LONG 1H direction, so only those coins (plus the selected one) are scanned
+  for (const p of coins.filter(p => S.bias[p].bias === "long" || p === sel)) {
+    const gate = gateFn(S.h1[p], "1H"), rows = [], inst = X.spotId(p);
     for (const tf of DAY_TFS) {
-      const c = await X.candles(p, tf), s = latestSignal(c, tf, gate, DAY);
+      const c = await X.candles(inst, tf), s = latestSignal(c, tf, gate, DAY);
       if (s) sigs.push(Object.assign({pair: p, tf, kind: "day"}, s));
-      if (p === sel) rows.push({tf, n: c.length, sig: s, sum: summary(backtest(c, tf, gate, DAY, SPOT_FEE))});
+      if (p === sel) rows.push({tf, n: c.length, sig: s, sum: summary(backtest(c, tf, gate, DAY, X.fees.spot))});
     }
     if (p === sel) S.sel = {pair: p, rows};
   }
   S.sigs = sigs;
 }
 async function loadSwing() {
-  for (const p of watch) {
-    const d1 = await X.candles(p, "1D"), c4 = await X.candles(p, "4H"), gate = gateFn(d1, "1D");
-    S.swing[p] = {bias: biasDetail(d1, "1D"), sig: latestSignal(c4, "4H", gate, SWING), sum: summary(backtest(c4, "4H", gate, SWING, SPOT_FEE))};
+  for (const p of listed()) {
+    const inst = X.spotId(p), d1 = await X.candles(inst, "1D"), c4 = await X.candles(inst, "4H"), gate = gateFn(d1, "1D");
+    S.swing[p] = {bias: biasDetail(d1, "1D"), sig: latestSignal(c4, "4H", gate, SWING), sum: summary(backtest(c4, "4H", gate, SWING, X.fees.spot))};
   }
   S.swAt = Date.now();
 }
-async function loadPerp() {
-  const p = sel, id = X.swapId(p);
-  const [fund, fnow, mmr] = await Promise.all([X.funding(id), X.fundingNow(id), X.mmr(p)]);
-  const out = {pair: p, fund, fnow, mmr, rows: []};
+async function perpRows(E, coin) {
+  const id = E.perpId(coin);
+  const [fund, fnow, mmr] = await Promise.all([E.funding(id), E.fundingNow(id), E.mmr(coin).catch(() => 0.01)]);
+  const out = {pair: coin, id, fund, fnow, mmr, rows: [], src: "browser"};
   for (const [tf, gtf, prm] of [["30m", "1H", DAY], ["4H", "1D", SWING]]) {
-    const g = await X.candles(id, gtf), c = await X.candles(id, tf), gate = gateFn(g, gtf);
-    out.rows.push({tf, gtf, bias: biasDetail(g, gtf), sig: latestSignal(c, tf, gate, prm), sum: summary(backtest(c, tf, gate, prm, PERP_FEE, fund)), last: c.length ? c[c.length - 1][4] : null});
+    const g = await E.candles(id, gtf, true), c = await E.candles(id, tf, true), gate = gateFn(g, gtf);
+    out.rows.push({tf, gtf, bias: biasDetail(g, gtf).bias, sig: latestSignal(c, tf, gate, prm), n: c.length,
+      sum: summary(backtest(c, tf, gate, prm, E.fees.perp, fund, fnow.periodH * 3600000)), last: c.length ? c[c.length - 1][4] : null});
   }
+  return out;
+}
+function perpFromFeed(coin) {         // Kraken: computed by the box (Kraken Futures has no CORS)
+  const k = kperp(coin); if (!k) return null;
+  return {pair: coin, id: k.inst, mmr: k.mmr, fnow: {rate: k.funding_next, next: null, periodH: k.funding_period_h}, src: "box", ts: S.feed.kraken_perp.ts, last: k.last,
+    rows: Object.entries(k.tfs).map(([tf, r]) => ({tf, gtf: r.gate_tf, bias: r.bias, sig: r.signal, sum: r.summary, last: r.last, n: r.n_candles}))};
+}
+async function loadPerp() {
+  if (!hasPerp(sel)) { S.perp = {pair: sel, none: true}; return []; }
+  const out = X.perpInBrowser ? await perpRows(X, sel) : perpFromFeed(sel);
   S.perp = out;
-  return out.rows.filter(r => r.sig).map(r => Object.assign({pair: id, tf: r.tf, kind: "perp"}, r.sig));
+  return out.rows.filter(r => r.sig && (r.sig.age || 0) <= 2).map(r => Object.assign({pair: out.id, tf: r.tf, kind: "perp"}, r.sig));
 }
 async function loadPort() {
-  const coins = [...new Set([...watch, ...holdings.map(h => h.coin + "-USDT")])];
-  for (const p of coins) {
+  const coins = [...new Set([...watch, ...holdings.map(h => h.coin)])].filter(c => X.spotId(c));
+  const ticks = await X.tickers(coins.map(X.spotId));
+  for (const [i, p] of coins.entries()) {
     try {
-      const t = await X.ticker(p), d1 = await X.candles(p, "1D"), w1 = await X.candles(p, "1W");
+      const t = ticks[i]; if (t.err) throw new Error(t.err);
+      const inst = X.spotId(p), d1 = await X.candles(inst, "1D"), w1 = await X.candles(inst, "1W");
       const i1 = indicators(d1), iw = indicators(w1), n = d1.length - 1, m = w1.length - 1;
       S.port[p] = {last: t.last,
         d1: d1.length > 55 ? (d1[n][4] > i1.e50[n] && i1.e20[n] > i1.e50[n] ? "up" : d1[n][4] < i1.e50[n] && i1.e20[n] < i1.e50[n] ? "down" : "mixed") : "new",
@@ -438,12 +665,17 @@ function announce(sigs) {
 }
 
 // ---------- renderers ----------
-const WARN = `<div class="banner bn-amb">Read before you trade<ul>
-  <li>1-2 minute scalping is mostly noise, and fees (about 0.2% per round trip) eat small gains. The paper results show it.</li>
+const fee2 = f => (f * 100).toFixed(f * 100 < 0.1 ? 3 : 2).replace(/0$/, "") + "%";
+function warnHtml() { return `<div class="banner bn-amb">Read before you trade<ul>
+  <li>1-2 minute scalping is mostly noise, and fees (${X.label}: ${fee2(X.fees.spot)} per side, ${fee2(2 * X.fees.spot)} per round trip) eat small gains. The paper results show it.</li>
   <li>Always use a stop-loss. You tap every trade yourself; this app never places orders.</li>
-  <li>Start on the OKX demo account (Demo trading) before real money.</li>
-  <li>Never share codes, passwords or seed phrases, and never let anyone (friends included) set up accounts for you.</li></ul></div>`;
-function errBanner(k) { return S.err[k] ? `<div class="banner bn-red">Couldn't load OKX data: ${esc(S.err[k])}. No prices are shown instead of old or made-up ones; it retries every minute.</div>` : ""; }
+  <li>Start on the OKX demo account (Demo trading), or the exchange's own demo (Bybit Demo Trading, Kraken Futures demo), before real money.</li>
+  <li>Never share codes, passwords or seed phrases, and never let anyone (friends included) set up accounts for you.</li></ul></div>`; }
+function errBanner(k) { return S.err[k] ? `<div class="banner bn-red">Couldn't load ${X.label} data: ${esc(S.err[k])}. No prices are shown instead of old or made-up ones; it retries every minute.</div>` : ""; }
+function srcLine(extra) { return `<p class="xs mut" style="margin:.4rem 0 0">Prices from <b>${X.label}</b> (${X.quote} pairs)${extra ? " · " + extra : ""}. Fees used: ${esc(X.feeNote)} · <a href="${X.feeSrc}" target="_blank" rel="noopener">source</a>.</p>`; }
+function exChips(attr = "data-ex", cur = exName) { return `<div class="chips">${EX_NAMES.map(n => `<button class="chip ${n === cur ? "on" : ""}" ${attr}="${n}">${EX[n].label}</button>`).join("")}</div>`; }
+function hiddenNote() { const u = unlisted(); return u.length ? `<p class="xs amb" style="margin:.4rem 0 0">Not listed on ${X.label} (${X.quote}), hidden: ${esc(u.join(", "))}.</p>` : ""; }
+function krakenFeeBanner() { return X.name === "kraken" ? `<div class="banner bn-blu">Kraken Pro base fees are high for small trades: ${fee2(X.fees.spot)} taker per side (${fee2(2 * X.fees.spot)} per round trip). Short-timeframe spot trades rarely beat that; the paper results include it.</div>` : ""; }
 function biasWhy(d) {
   if (!d || d.close == null) return "not enough data";
   return `${d.close > d.e50 ? "above" : "below"} EMA50 · EMA20 ${d.e20 > d.e50 ? ">" : "<"} EMA50 · EMA50 ${d.e50 > d.e50_prev ? "rising" : "falling"} · RSI ${d.rsi.toFixed(0)}`;
@@ -452,54 +684,62 @@ function sigCard(s, extra = "") {
   const noise = s.kind === "day" && (s.tf === "1m" || s.tf === "2m");
   return `<div class="sig"><div class="row"><b>${esc(s.pair)}</b><span class="pill p-long">${s.kind === "perp" ? "LONG CONTRACT" : "LONG"}</span><span class="sm">${s.tf}</span>
     ${noise ? `<span class="pill p-amb">NOISE RISK</span>` : ""}<span class="sp"></span><span class="sm mut">${tmd(s.t)} AMS${s.age ? ` · ${s.age} candle${s.age > 1 ? "s" : ""} ago` : ""}</span></div>
-    <div class="lv"><div>Entry<b>${px(s.entry)}</b></div><div>Take profit<b class="grn">${px(s.tp)}</b></div><div>Stop-loss<b class="red">${px(s.sl)}</b></div><div>Risk:reward<b>1 : ${s.rr.toFixed(1)}</b></div></div>${extra}</div>`;
+    <div class="lv"><div>Entry<b>${px(s.entry)}</b></div><div>Take profit<b class="grn">${px(s.tp)}</b></div><div>Stop-loss<b class="red">${px(s.sl)}</b></div><div>Risk:reward<b>1 : ${s.rr.toFixed(1)}</b></div></div>${extra}
+    <div class="row" style="margin-top:.35rem"><span class="sp"></span><button class="chip" data-log="${esc(JSON.stringify({ex: s.ex || exName, pair: s.coin || s.pair, tf: s.tf, kind: s.kind, entry: s.entry, sl: s.sl, tp: s.tp, t: s.t}))}">I took this · log it</button></div></div>`;
 }
 function sumCells(s) {
   if (!s || !s.n) return `<td class="n">0</td><td class="n">-</td><td class="n">-</td><td class="n">-</td>`;
   return `<td class="n">${s.n}</td><td class="n">${s.win.toFixed(0)}%</td><td class="n">${s.avg_r.toFixed(2)}</td><td class="n ${s.net >= 0 ? "grn" : "red"}">${pct(s.net)}</td>`;
 }
 function renderDay() {
-  const el = $("v-day");
-  if (S.err.day && !Object.keys(S.bias).length) { el.innerHTML = errBanner("day") + WARN; return; }
-  if (!Object.keys(S.bias).length) { el.innerHTML = `<div class="card"><p class="sm mut" style="margin:0">Loading live OKX data…</p></div>` + WARN; return; }
-  const tiles = watch.map(p => {
+  const el = $("v-day"), coins = listed();
+  const top = `<div class="card" style="padding:.7rem 1rem"><div class="row"><span class="sm mut">Exchange</span>${exChips()}<span class="sp"></span><button class="btn ghost" data-go="an">Analyze a coin</button></div>${hiddenNote()}</div>`;
+  if (S.err.day && !Object.keys(S.bias).length) { el.innerHTML = top + errBanner("day") + warnHtml(); bindTop(el); return; }
+  if (!Object.keys(S.bias).length) { el.innerHTML = top + `<div class="card"><p class="sm mut" style="margin:0">Loading live ${X.label} data…</p></div>` + warnHtml(); bindTop(el); return; }
+  const tiles = coins.map(p => {
     const t = S.tick[p] || {}, b = S.bias[p];
-    return `<button class="tile ${p === sel ? "sel" : ""}" data-pair="${esc(p)}"><b>${esc(p.replace("-USDT", ""))}</b>
+    return `<button class="tile ${p === sel ? "sel" : ""}" data-pair="${esc(p)}"><b>${esc(p)}</b>
       <div class="px">${t.err ? `<span class="red sm">no price</span>` : px(t.last)}</div>
-      <div class="xs ${t.last > t.open24h ? "grn" : "red"}">${t.last ? pct((t.last / t.open24h - 1) * 100) + " 24h" : ""}</div>
+      <div class="xs ${t.last > t.open ? "grn" : "red"}">${t.last ? pct((t.last / t.open - 1) * 100) + " " + t.openLabel : ""}</div>
       <div style="margin-top:.35rem">${b ? biasPill(b.bias) : ""}</div><div class="xs mut" style="margin-top:.3rem">${esc(biasWhy(b))}</div></button>`;
   }).join("");
-  const nl = watch.filter(p => S.bias[p]?.bias === "long").length, ns = watch.filter(p => S.bias[p]?.bias === "short").length;
+  const nl = coins.filter(p => S.bias[p]?.bias === "long").length, ns = coins.filter(p => S.bias[p]?.bias === "short").length;
   const sigs = S.sigs.slice().sort((a, b) => b.t - a.t), sr = S.sel.rows || [];
-  el.innerHTML = errBanner("day") + `
-  <div class="card"><div class="row"><h2 style="margin:0">Today's direction · 1H chart</h2><span class="sp"></span><span class="xs mut">last closed 1H candle</span></div>
+  el.innerHTML = top + errBanner("day") + `
+  <div class="card"><div class="row"><h2 style="margin:0">Today's direction · 1H chart</h2><span class="sp"></span><span class="xs mut">${X.label} · last closed 1H candle</span></div>
     <p class="sm mut" style="margin:.3rem 0 .7rem">LONG = day longs allowed · NEUTRAL = no trades · SHORT = avoid longs, consider spot-selling what you hold (spot can't short). Tap a coin for its details.</p>
-    <div class="tiles">${tiles}</div></div>
-  ${WARN}
+    <div class="tiles">${tiles}</div>${srcLine()}</div>
+  ${krakenFeeBanner()}${warnHtml()}
   <div class="split"><div>
   <div class="card"><h2>Entry signals now</h2>
-    ${sigs.length ? sigs.map(s => sigCard(s)).join("") : `<p class="sm mut">No fresh entry on any timeframe. ${nl} coin${nl === 1 ? "" : "s"} with a long direction, ${ns} to avoid, ${watch.length - nl - ns} neutral. Signals only appear in the 1H direction.</p>`}
+    ${sigs.length ? sigs.map(s => sigCard(s)).join("") : `<p class="sm mut">No fresh entry on any timeframe. ${nl} coin${nl === 1 ? "" : "s"} with a long direction, ${ns} to avoid, ${coins.length - nl - ns} neutral. Signals only appear in the 1H direction.</p>`}
     <p class="xs mut">Spot, no leverage. Entry = close of the signal candle. Stop = 1.5 × ATR below, target = 3 × ATR above. Amsterdam time.</p></div>
   ${boxAlertsCard()}
   </div><div>
   <div class="card"><h2>${esc(sel)} by timeframe · paper results</h2>
     <div class="scroll"><table class="tbl"><tr><th>TF</th><th>Now</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>
     ${sr.map(r => `<tr><td><b>${r.tf}</b></td><td class="sm">${r.sig ? `<span class="grn">LONG ${px(r.sig.entry)}</span>` : S.bias[sel]?.bias !== "long" ? `<span class="mut">1H not long</span>` : `<span class="mut">no setup</span>`}</td>${sumCells(r.sum)}</tr>`).join("")}</table></div>
-    <p class="xs mut">Paper trades on the last 300 candles per timeframe (10m/20m are built from 300 5m candles, so they cover fewer). Net = after 0.1% fee per side, summed per trade.</p></div>
+    <p class="xs mut">Paper trades on the last 300 ${X.label} candles per timeframe (built timeframes cover fewer). Net = after ${fee2(X.fees.spot)} fee per side, summed per trade.</p></div>
   ${weeklyCard()}</div></div>
   ${rulesCard()}`;
   el.querySelectorAll("[data-pair]").forEach(b => b.onclick = () => { sel = b.dataset.pair; lsSet("okx_sel", sel); renderDay(); refresh(true); });
+  bindTop(el);
 }
+function bindTop(el) {
+  el.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => setExchange(b.dataset.ex));
+  el.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
+}
+function boxEx() { const f = S.feed; return f ? (f.exchange_label || "OKX") : "-"; }
 function weeklyCard() {
   const w = S.feed && S.feed.weekly; if (!w) return "";
   const rows = Object.entries(w.tfs).map(([tf, r]) => `<tr><td><b>${tf}</b>${w.muted.includes(tf) ? ` <span class="pill p-short">MUTED</span>` : r.flag ? ` <span class="pill p-amb">LOSES</span>` : ""}</td>${sumCells(r.backtest)}</tr>`).join("");
-  return `<div class="card"><h2>Weekly paper results · box, all coins</h2><div class="scroll"><table class="tbl"><tr><th>TF</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>${rows}</table></div>
-    <p class="xs mut">Run ${tmd(w.ts * 1000)} AMS on the last 1440 candles per timeframe for ${w.pairs.length} coins, after fees. A day timeframe that loses after fees (10+ trades) is flagged; MUTED = no phone push for it until a later week is positive. It still shows here.</p></div>`;
+  return `<div class="card"><h2>Weekly paper results · box, ${esc(w.label || "OKX")}, all coins</h2><div class="scroll"><table class="tbl"><tr><th>TF</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>${rows}</table></div>
+    <p class="xs mut">Run ${tmd(w.ts * 1000)} AMS on ${esc(w.label || "OKX")} candles (up to 1440 per timeframe) for ${w.pairs.length} coins, after that exchange's fees. A day timeframe that loses after fees (10+ trades) is flagged; MUTED = no phone push for it until a later week is positive. It still shows here.</p></div>`;
 }
 function boxAlertsCard() {
   const a = S.feed && S.feed.alerts; if (!a || !a.length) return "";
   return `<div class="card"><h2>Recent alerts from the box · paper-tracked</h2><div class="scroll"><table class="tbl"><tr><th>When</th><th>Coin</th><th>TF</th><th class="n">Entry</th><th>Result</th></tr>
-    ${a.slice(0, 15).map(x => `<tr><td class="sm">${tmd(x.ts * 1000)}</td><td>${esc(x.pair)}${x.market === "perp" ? ` <span class="xs mut">${x.lev}x</span>` : ""}</td><td>${esc(x.tf)}${x.pushed ? "" : ` <span class="xs mut">screen</span>`}</td><td class="n">${px(x.entry)}</td>
+    ${a.slice(0, 15).map(x => `<tr><td class="sm">${tmd(x.ts * 1000)}</td><td>${esc(x.pair)} <span class="xs mut">${esc(EX[x.exchange || "okx"]?.label || "")}${x.market === "perp" ? ` ${x.lev}x` : ""}</span></td><td>${esc(x.tf)}${x.pushed ? "" : ` <span class="xs mut">screen</span>`}</td><td class="n">${px(x.entry)}</td>
       <td class="sm">${x.status === "open" ? "open" : `<span class="${x.net >= 0 ? "grn" : "red"}">${esc(x.status)} ${pct(x.net, 2)}</span>`}</td></tr>`).join("")}</table></div>
     <p class="xs mut">Feed from ${tmd(S.feed.ts * 1000)} AMS (published at most every 10 min). Phone pushes arrive straight away.</p></div>`;
 }
@@ -508,74 +748,86 @@ function rulesCard() {
   <div class="rule"><b>1. Direction from the 1H chart (day) or the 1D chart (swing)</b><span>LONG when price is above the 50 EMA, the 20 EMA is above the 50 EMA, the 50 EMA is higher than 5 candles ago and RSI(14) is 50 or more. SHORT is the mirror image. Anything else is NEUTRAL: no trades.</span></div>
   <div class="rule"><b>2. Entries only in that direction, long only</b><span>On 1m, 2m, 5m, 10m, 15m, 20m and 30m (4H for swing): the 20 EMA is above the 50 EMA, price dipped to the 20 EMA in the last 3 candles, RSI crosses back up through 50, and the candle closes green above the 20 EMA.</span></div>
   <div class="rule"><b>3. Levels</b><span>Entry = candle close. Stop-loss = 1.5 × ATR(14) below (2 × for swing). Take profit = 3 × ATR above (4 × for swing). That's 1 : 2 risk:reward before fees.</span></div>
-  <div class="rule"><b>4. Paper results</b><span>Each signal is bought at its close and sold at the stop, the target, or after 48 candles (60 for swing). If stop and target are both hit in one candle it counts as a stop. Spot: 0.1% fee per side. Contracts: 0.05% per side plus funding.</span></div>
-  <div class="rule"><b>5. Data</b><span>Only OKX public market data: no keys, no account. Only closed candles are used, so a signal never changes after it appears.</span></div></div>`;
+  <div class="rule"><b>4. Paper results</b><span>Each signal is bought at its close and sold at the stop, the target, or after 48 candles (60 for swing). If stop and target are both hit in one candle it counts as a stop. Fees are the selected exchange's standard taker fee per side (${X.label}: spot ${fee2(X.fees.spot)}, contracts ${fee2(X.fees.perp)}); contracts also pay or get funding.</span></div>
+  <div class="rule"><b>5. Data</b><span>Only public market data from the exchange you pick (OKX, Bybit or Kraken): no keys, no account. Only closed candles are used, so a signal never changes after it appears. Prices differ a little between exchanges; every number says where it came from.</span></div></div>`;
 }
 function renderSwing() {
-  const el = $("v-swing");
-  if (!Object.keys(S.swing).length) { el.innerHTML = errBanner("swing") || `<div class="card"><p class="sm mut" style="margin:0">Loading 1D and 4H candles…</p></div>`; return; }
-  const rows = watch.map(p => { const s = S.swing[p]; if (!s) return ""; return `<tr><td><b>${esc(p)}</b></td><td>${biasPill(s.bias.bias)}</td>${sumCells(s.sum)}</tr>`; }).join("");
-  const sigs = watch.filter(p => S.swing[p] && S.swing[p].sig).map(p => sigCard(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
+  const el = $("v-swing"), coins = listed();
+  if (!Object.keys(S.swing).length) { el.innerHTML = errBanner("swing") || `<div class="card"><p class="sm mut" style="margin:0">Loading ${X.label} 1D and 4H candles…</p></div>`; return; }
+  const rows = coins.map(p => { const s = S.swing[p]; if (!s) return ""; return `<tr><td><b>${esc(p)}</b></td><td>${biasPill(s.bias.bias)}</td>${sumCells(s.sum)}</tr>`; }).join("");
+  const sigs = coins.filter(p => S.swing[p] && S.swing[p].sig).map(p => sigCard(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
   el.innerHTML = errBanner("swing") + `<div class="split"><div><div class="card"><h2>Swing setups · 1D direction, 4H entries</h2>
     ${sigs.length ? sigs.join("") : `<p class="sm mut">No open swing setup right now. A swing entry needs a LONG 1D direction plus the pullback and RSI turn on the 4H chart.</p>`}
-    <p class="xs mut">Spot, held for days. Stop = 2 × ATR(4H) below entry, target = 4 × ATR above. Check the stop is still in place every day.</p></div></div>
+    <p class="xs mut">Spot, held for days. Stop = 2 × ATR(4H) below entry, target = 4 × ATR above. Check the stop is still in place every day.</p>${srcLine()}</div></div>
     <div><div class="card"><h2>1D direction and 4H paper results</h2><div class="scroll"><table class="tbl"><tr><th>Coin</th><th>1D</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>${rows}</table></div>
-    <p class="xs mut">Last 300 4H candles (about 50 days) per coin, after 0.1% fee per side.</p></div></div></div>`;
+    <p class="xs mut">Last 300 ${X.label} 4H candles (about 50 days) per coin, after ${fee2(X.fees.spot)} fee per side.</p>${hiddenNote()}</div></div></div>`;
+}
+function perpBody(P, E, levX) {
+  if (!P || P.none) return "";
+  const fr = P.fnow && P.fnow.rate != null ? `Funding ${P.src === "box" ? "next" : "now"} <b>${(P.fnow.rate * 100).toFixed(4)}%</b> per ${P.fnow.periodH}h (${P.fnow.rate >= 0 ? "longs pay" : "longs get paid"})${P.fnow.next ? `, next ${tm(P.fnow.next)} AMS` : ""}` : "";
+  const age = P.src === "box" ? `<p class="xs amb" style="margin:.3rem 0">Computed by the box from Kraken Futures ${tmd(P.ts * 1000)} AMS (Kraken Futures can't be read by a browser). Perp last ${px(P.last)} USD.</p>` : "";
+  return age + `<div class="row sm" style="margin:.6rem 0 .2rem"><span>${fr}</span><span class="mut">Maintenance margin ${(P.mmr * 100).toFixed(2)}%</span></div>` +
+    P.rows.map(r => {
+      const liq = r.sig ? liquidation(r.sig.entry, levX, P.mmr) : r.last ? liquidation(r.last, levX, P.mmr) : null;
+      const extra = r.sig ? `<p class="xs mut" style="margin:.45rem 0 0">At ${levX}x: liquidation about ${px(liq.price)} (${liq.dist_pct.toFixed(1)}% below entry). The stop is ${((1 - r.sig.sl / r.sig.entry) * 100).toFixed(2)}% below entry, so it should hit long before liquidation. Size it so the stop costs at most 1% of your account.</p>` : "";
+      const sm = r.sum || {n: 0};
+      return `<h3>${r.tf === "30m" ? "Day · 30m entries, 1H direction" : "Swing · 4H entries, 1D direction"} ${biasPill(r.bias)}</h3>
+        ${r.sig ? sigCard(Object.assign({pair: P.id, coin: P.pair, ex: E.name, tf: r.tf, kind: "perp"}, r.sig), extra) : `<p class="sm mut">No long setup now${r.bias !== "long" ? ` (${r.gtf} direction isn't long)` : ""}. At ${levX}x, liquidation would be about ${liq ? liq.dist_pct.toFixed(1) : "-"}% below the current price.</p>`}
+        <div class="scroll"><table class="tbl"><tr><th>Paper</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th><th class="n">On ${levX}x margin</th></tr>
+        <tr><td class="sm">${r.tf}</td>${sumCells(sm)}<td class="n ${sm.net >= 0 ? "grn" : "red"}">${sm.n ? pct(sm.net * levX) : "-"}</td></tr></table></div>
+        <p class="xs mut">${sm.n ? `Fees ${pct(-sm.fees, 2)} (${fee2(E.fees.perp)} per side) and funding ${pct(-sm.fund, 3)} included. ` : ""}Last ${r.n || 300} ${r.tf} candles of ${esc(P.id)} on ${E.label}. Net is per position size; on margin it's multiplied by the leverage.</p>`;
+    }).join("");
 }
 function renderPerp() {
-  const el = $("v-perp"), P = S.perp;
-  const chips = watch.map(p => `<button class="chip ${p === sel ? "on" : ""}" data-pp="${esc(p)}">${esc(p.replace("-USDT", ""))}</button>`).join("");
+  const el = $("v-perp"), P = S.perp, coins = listed().filter(hasPerp), noP = listed().filter(c => !hasPerp(c));
+  const chips = coins.map(p => `<button class="chip ${p === sel ? "on" : ""}" data-pp="${esc(p)}">${esc(p)}</button>`).join("");
   const levs = [1, 2, 3].map(l => `<button class="chip ${l === lev ? "on" : ""}" data-lev="${l}">${l}x</button>`).join("");
   let body = "";
-  if (P && P.pair === sel) {
-    body = `<div class="row sm" style="margin:.6rem 0 .2rem"><span>Funding now <b>${(P.fnow.rate * 100).toFixed(4)}%</b> per 8h (${P.fnow.rate >= 0 ? "longs pay" : "longs get paid"}), next ${tm(P.fnow.next)} AMS</span><span class="mut">Maintenance margin ${(P.mmr * 100).toFixed(2)}%</span></div>` +
-    P.rows.map(r => {
-      const liq = r.sig ? liquidation(r.sig.entry, lev, P.mmr) : r.last ? liquidation(r.last, lev, P.mmr) : null;
-      const extra = r.sig ? `<p class="xs mut" style="margin:.45rem 0 0">At ${lev}x: liquidation about ${px(liq.price)} (${liq.dist_pct.toFixed(1)}% below entry). The stop is ${((1 - r.sig.sl / r.sig.entry) * 100).toFixed(2)}% below entry, so it should hit long before liquidation. Size it so the stop costs at most 1% of your account.</p>` : "";
-      return `<h3>${r.tf === "30m" ? "Day · 30m entries, 1H direction" : "Swing · 4H entries, 1D direction"} ${biasPill(r.bias.bias)}</h3>
-        ${r.sig ? sigCard(Object.assign({pair: X.swapId(sel), tf: r.tf, kind: "perp"}, r.sig), extra) : `<p class="sm mut">No long setup now${r.bias.bias !== "long" ? ` (${r.gtf} direction isn't long)` : ""}. At ${lev}x, liquidation would be about ${liq ? liq.dist_pct.toFixed(1) : "-"}% below the current price.</p>`}
-        <div class="scroll"><table class="tbl"><tr><th>Paper</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th><th class="n">On ${lev}x margin</th></tr>
-        <tr><td class="sm">${r.tf}</td>${sumCells(r.sum)}<td class="n ${r.sum.net >= 0 ? "grn" : "red"}">${r.sum.n ? pct(r.sum.net * lev) : "-"}</td></tr></table></div>
-        <p class="xs mut">${r.sum.n ? `Fees ${pct(-r.sum.fees, 2)} and funding ${pct(-r.sum.fund, 3)} included. ` : ""}Last 300 ${r.tf} candles of ${esc(X.swapId(sel))}. Net is per position size; on margin it's multiplied by the leverage.</p>`;
-    }).join("");
-  }
+  if (P && P.pair === sel && !P.none) body = perpBody(P, X, lev);
+  else if (!hasPerp(sel)) body = `<p class="sm mut">${esc(sel)} has no ${X.perpName} ${X.perpInBrowser ? "" : "in the box feed (the box covers your watchlist coins; add it there)"}. Pick a coin above.</p>`;
   el.innerHTML = errBanner("perp") + `<div class="banner bn-red">Leverage warning<ul>
     <li>Contracts multiply losses too: at 3x you lose 3% of your margin for every 1% the coin drops, plus fees and funding.</li>
     <li>Use 2x, never more than 3x, a small size, isolated margin and a stop-loss on every trade.</li>
-    <li>Long only here. Spot stays the default; try this on the OKX demo account first.</li></ul></div>
-    <div class="card"><h2>Long contracts · USDT perpetual swaps</h2><div class="chips">${chips}</div><div class="row" style="margin-top:.6rem"><span class="sm mut">Leverage</span><div class="chips">${levs}</div></div>${body || (S.err.perp ? "" : `<p class="sm mut">Loading ${esc(sel)} contract data…</p>`)}</div>`;
+    <li>Long only here. Spot stays the default; try this on the OKX demo account (or ${esc(X.demo)}) first.</li></ul></div>
+    <div class="card"><h2>Long contracts · ${esc(X.label)} ${esc(X.perpName)}</h2><div class="chips">${chips}</div><div class="row" style="margin-top:.6rem"><span class="sm mut">Leverage</span><div class="chips">${levs}</div></div>
+    ${body || (S.err.perp ? "" : `<p class="sm mut">Loading ${esc(sel)} contract data…</p>`)}
+    ${noP.length ? `<p class="xs amb">No ${esc(X.label)} perpetual for: ${esc(noP.join(", "))}.</p>` : ""}
+    <p class="xs mut" style="margin:.4rem 0 0">Prices from ${X.label} perpetuals · fees ${esc(X.feeNote)} · <a href="${X.feeSrc}" target="_blank" rel="noopener">source</a>.</p></div>`;
   el.querySelectorAll("[data-pp]").forEach(b => b.onclick = () => { sel = b.dataset.pp; lsSet("okx_sel", sel); S.perp = {}; renderPerp(); refresh(true); });
   el.querySelectorAll("[data-lev]").forEach(b => b.onclick = () => { lev = +b.dataset.lev; lsSet("okx_lev", lev); renderPerp(); });
+  if (coins.length && !coins.includes(sel)) { sel = coins[0]; S.perp = {}; refresh(true); }
 }
-const money = v => "$" + v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const money = v => v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " + X.quote;
 function renderPort() {
   const el = $("v-port");
   let tot = 0, cost = 0, ok = true;
-  const rows = holdings.map((h, i) => { const q = S.port[h.coin + "-USDT"], v = q && q.last ? q.last * h.amount : null;
+  const rows = holdings.map((h, i) => { const q = S.port[h.coin], v = q && q.last ? q.last * h.amount : null;
     if (v == null) ok = false; else { tot += v; cost += h.price * h.amount; }
-    return `<tr><td><b>${esc(h.coin)}</b><div class="xs mut">${h.amount} @ ${px(h.price)}</div></td><td class="n">${q && q.last ? px(q.last) : q && q.err ? `<span class="red">no price</span>` : "…"}</td>
+    return `<tr><td><b>${esc(h.coin)}</b><div class="xs mut">${h.amount} @ ${px(h.price)}</div></td><td class="n">${q && q.last ? px(q.last) : !X.spotId(h.coin) ? `<span class="mut">not on ${X.label}</span>` : q && q.err ? `<span class="red">no price</span>` : "…"}</td>
       <td class="n">${v != null ? money(v) : "-"}</td><td class="n ${v != null && q.last >= h.price ? "grn" : "red"}">${v != null ? pct((q.last / h.price - 1) * 100) : "-"}</td>
       <td class="n"><button class="chip" data-del="${i}" title="Remove">✕</button></td></tr>`; }).join("");
-  const coins = [...new Set([...watch, ...holdings.map(h => h.coin + "-USDT")])];
+  const coins = [...new Set([...watch, ...holdings.map(h => h.coin)])].filter(c => X.spotId(c));
   const tr = t => t === "up" ? `<span class="pill p-long">UP</span>` : t === "down" ? `<span class="pill p-short">DOWN</span>` : `<span class="pill p-neutral">${esc((t || "-").toUpperCase())}</span>`;
   const lt = coins.map(p => { const q = S.port[p]; if (!q) return ""; if (q.err) return `<tr><td>${esc(p)}</td><td colspan="4" class="red sm">${esc(q.err)}</td></tr>`;
-    return `<tr><td><b>${esc(p.replace("-USDT", ""))}</b></td><td class="n">${px(q.last)}</td><td>${tr(q.d1)}</td><td>${tr(q.w1)}</td><td class="n">${q.e50 ? pct((q.last / q.e50 - 1) * 100) : "-"}</td></tr>`; }).join("");
+    return `<tr><td><b>${esc(p)}</b></td><td class="n">${px(q.last)}</td><td>${tr(q.d1)}</td><td>${tr(q.w1)}</td><td class="n">${q.e50 ? pct((q.last / q.e50 - 1) * 100) : "-"}</td></tr>`; }).join("");
   el.innerHTML = errBanner("port") + `<div class="split"><div><div class="card"><h2>My holdings · read-only tracking</h2>
     ${holdings.length ? `<div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Price</th><th class="n">Value</th><th class="n">P/L</th><th></th></tr>${rows}</table></div>
       ${ok ? `<p class="sm" style="margin:.5rem 0 0">Total <b>${money(tot)}</b> · cost ${money(cost)} · <span class="${tot >= cost ? "grn" : "red"}">${pct((tot / cost - 1) * 100)}</span></p>` : ""}`
-      : `<p class="sm mut">Add what you hold to see its value at live OKX prices.</p>`}
-    <div class="addrow"><input class="f" id="hCoin" placeholder="Coin (BTC)" autocapitalize="characters"><input class="f" id="hAmt" type="number" inputmode="decimal" placeholder="Amount"><input class="f" id="hPx" type="number" inputmode="decimal" placeholder="Buy price $"><button class="btn" id="hAdd">Add</button></div>
+      : `<p class="sm mut">Add what you hold to see its value at live ${X.label} prices.</p>`}
+    <div class="addrow"><input class="f" id="hCoin" placeholder="Coin (BTC)" autocapitalize="characters"><input class="f" id="hAmt" type="number" inputmode="decimal" placeholder="Amount"><input class="f" id="hPx" type="number" inputmode="decimal" placeholder="Buy price"><button class="btn" id="hAdd">Add</button></div>
     <span class="sm red" id="hErr"></span>
-    <p class="xs mut">Stored only on this device, encrypted with your password. No exchange connection.</p>
-    <div class="row"><button class="chip" id="hExp">Export backup</button><button class="chip" id="hImp">Import backup</button></div></div></div>
+    <p class="xs mut">Valued at ${X.label} ${X.quote} prices. Stored only on this device, encrypted with your password. No exchange connection.</p>
+    <div class="row"><button class="chip" id="hExp">Export backup</button><button class="chip" id="hImp">Import backup</button><button class="chip" data-go="log">Logbook (${logbook.filter(t => t.exit == null).length} open)</button></div>
+    <p class="xs mut">Logging a spot long in the Logbook can add it here, and closing it there can sell it here.</p></div></div>
     <div><div class="card"><h2>Long-term watch · 1D and 1W trend</h2>${lt ? `<div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Price</th><th>1D</th><th>1W</th><th class="n">vs 1D EMA50</th></tr>${lt}</table></div>` : `<p class="sm mut">Loading daily and weekly candles…</p>`}
-    <p class="xs mut">1D UP = price above the 50-day EMA and 20 > 50 EMA. 1W UP = weekly close above the 20-week EMA. For longer-hold entries see Swing (spot) and Contracts (4H long, max ${MAX_LEV}x).</p></div></div></div>`;
+    <p class="xs mut">${X.label} candles. 1D UP = price above the 50-day EMA and 20 > 50 EMA. 1W UP = weekly close above the 20-week EMA. For longer-hold entries see Swing (spot) and Contracts (4H long, max ${MAX_LEV}x).</p></div></div></div>`;
+  bindTop(el);
   el.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { holdings.splice(+b.dataset.del, 1); await saveHoldings(holdings); renderPort(); });
   $("hAdd").onclick = async () => {
-    const coin = $("hCoin").value.trim().toUpperCase().replace(/-USDT$/, ""), amt = +$("hAmt").value, p = +$("hPx").value, err = m => $("hErr").textContent = m;
-    if (!/^[A-Z0-9]{2,12}$/.test(coin)) return err("Coin like BTC or SOL.");
+    const coin = normCoin($("hCoin").value), amt = +$("hAmt").value, p = +$("hPx").value, err = m => $("hErr").textContent = m;
+    if (!coin) return err("Coin like BTC or SOL.");
     if (!(amt > 0) || !(p > 0)) return err("Amount and buy price must be above 0.");
-    try { await X.ticker(coin + "-USDT"); } catch (e) { return err(`OKX has no ${coin}-USDT spot price.`); }
+    if (!X.spotId(coin)) return err(`${X.label} has no ${coin}/${X.quote} spot market.`);
     holdings.push({coin, amount: amt, price: p}); await saveHoldings(holdings); await loadPort(); renderPort();
   };
   $("hExp").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(holdings)], {type: "application/json"})); a.download = "okx-desk-holdings.json"; a.click(); };
@@ -587,9 +839,13 @@ function renderPort() {
 function renderSet() {
   const el = $("v-set"), f = S.feed;
   el.innerHTML = `<div class="split"><div>
-    <div class="card"><h2>Watchlist</h2><div class="chips">${watch.map(p => `<span class="chip">${esc(p)} <a data-rm="${esc(p)}" style="cursor:pointer;margin-left:.3rem">✕</a></span>`).join("")}</div>
+    <div class="card"><h2>Exchange</h2>${exChips()}
+      <p class="xs mut" style="margin:.5rem 0 0">Switches the whole app to that exchange's own public market data: prices, candles, contracts and its fees (${esc(X.feeNote)}, <a href="${X.feeSrc}" target="_blank" rel="noopener">source</a>). Box scans and phone alerts: <b>${esc(boxEx())}</b>${f && f.exchange && f.exchange !== exName ? ` <span class="amb">(differs: send a fresh alert code below to switch the box too)</span>` : ""}.</p>
+      ${X.name === "kraken" ? `<p class="xs amb">Kraken: spot pairs are in USD. Kraken Futures blocks browser reads, so contract data comes from the box (watchlist coins only, refreshed every ~10 min).</p>` : ""}
+      ${X.name === "bybit" ? `<p class="xs amb">Bybit.com may not serve accounts in the Netherlands (Bybit EU is separate and has other fees). Public prices still load if your network allows it.</p>` : ""}</div>
+    <div class="card"><h2>Watchlist</h2><div class="chips">${watch.map(p => `<span class="chip">${esc(p)}${X.spotId(p) ? "" : ` <span class="xs amb">not on ${X.label}</span>`} <a data-rm="${esc(p)}" style="cursor:pointer;margin-left:.3rem">✕</a></span>`).join("")}</div>
       <div class="addrow"><input class="f" id="wAdd" placeholder="Add coin, e.g. AVAX" autocapitalize="characters"><button class="btn" id="wBtn">Add</button></div><span class="sm red" id="wErr"></span>
-      <p class="xs mut">5-8 liquid coins keeps it fast. The box scans the watchlist inside your alert code below.</p></div>
+      <p class="xs mut">5-8 liquid coins keeps it fast. Coins the selected exchange doesn't list are hidden there. The box scans the watchlist inside your alert code below.</p></div>
     <div class="card"><h2>Phone alerts · work with the app closed</h2>${alertsHtml()}</div>
     <div class="card"><h2>In-app alerts · while the app is open</h2><p class="sm mut" style="margin-top:0">Sound and a notification when a new signal appears on these day timeframes (swing and contracts always):</p>
       <div class="chips">${DAY_TFS.map(t => `<button class="chip ${inAppTfs.includes(t) ? "on" : ""}" data-iat="${t}">${t}</button>`).join("")}</div>
@@ -598,14 +854,15 @@ function renderSet() {
     <div class="card"><h2>Security</h2><p class="sm mut" style="margin-top:0">Your password is kept only as a salted PBKDF2-SHA256 hash (600,000 rounds) on this device. The app locks after ${SESSION_H} hours or when you tap Lock now.</p>
       <div class="addrow"><input class="f" id="cp1" type="password" autocomplete="new-password" placeholder="New password"><input class="f" id="cp2" type="password" autocomplete="new-password" placeholder="Repeat"><button class="btn ghost" id="cpGo">Change password</button></div>
       <span class="sm" id="cpMsg"></span><div class="row" style="margin-top:.4rem"><button class="btn warn" id="lockBtn">Lock now</button></div></div>
-    ${WARN}
-    <div class="card"><h2>About</h2><p class="sm mut" style="margin:0">Signals and paper results only. It can't trade, has no exchange login and never asks for API keys, 2FA codes or seed phrases. Data: OKX public market API, fetched by this device (${reqCount} requests this session). ${f ? `Box last scan ${f.heartbeat ? tmd(f.heartbeat.ts * 1000) + " AMS" : "-"} · ${f.devices} phone(s) registered.` : "Box feed not reachable."}</p></div>
+    ${warnHtml()}
+    <div class="card"><h2>About</h2><p class="sm mut" style="margin:0">Signals and paper results only. It can't trade, has no exchange login and never asks for API keys, 2FA codes or seed phrases. Data: ${X.label} public market API, fetched by this device (${reqCount} requests this session). ${f ? `Box last scan ${f.heartbeat ? tmd(f.heartbeat.ts * 1000) + " AMS" : "-"} on ${esc(boxEx())} · ${f.devices} phone(s) registered.` : "Box feed not reachable."}</p></div>
   </div></div>`;
+  bindTop(el);
   el.querySelectorAll("[data-rm]").forEach(a => a.onclick = () => { if (watch.length <= 1) return; watch = watch.filter(p => p !== a.dataset.rm); lsSet("okx_watch", watch); if (!watch.includes(sel)) sel = watch[0]; refreshCode(); });
-  $("wBtn").onclick = async () => { const c = $("wAdd").value.trim().toUpperCase().replace(/-USDT$/, ""), p = c + "-USDT", err = m => $("wErr").textContent = m;
-    if (!PAIR_RE.test(p)) return err("Coin like AVAX."); if (watch.includes(p)) return err("Already on the list."); if (watch.length >= 12) return err("12 coins max.");
-    try { await X.ticker(p); } catch (e) { return err(`OKX has no ${p} spot market.`); }
-    watch.push(p); lsSet("okx_watch", watch); refreshCode(); };
+  $("wBtn").onclick = async () => { const c = normCoin($("wAdd").value), err = m => $("wErr").textContent = m;
+    if (!c) return err("Coin like AVAX."); if (watch.includes(c)) return err("Already on the list."); if (watch.length >= 12) return err("12 coins max.");
+    if (!X.spotId(c)) return err(`${X.label} has no ${c}/${X.quote} spot market.`);
+    watch.push(c); lsSet("okx_watch", watch); refreshCode(); };
   el.querySelectorAll("[data-iat]").forEach(b => b.onclick = () => { const t = b.dataset.iat; inAppTfs = inAppTfs.includes(t) ? inAppTfs.filter(x => x !== t) : [...inAppTfs, t]; lsSet("okx_inapp_tfs", inAppTfs); renderSet(); });
   el.querySelectorAll("[data-pt]").forEach(b => b.onclick = () => { const t = b.dataset.pt; pushTfs = pushTfs.includes(t) ? pushTfs.filter(x => x !== t) : DAY_TFS.filter(x => x === t || pushTfs.includes(x)); lsSet("okx_push_tfs", pushTfs); refreshCode(); });
   el.querySelectorAll("[data-px]").forEach(b => b.onclick = () => { if (b.dataset.px === "s") { pushSwing = !pushSwing; lsSet("okx_push_swing", pushSwing); } else { pushPerp = !pushPerp; lsSet("okx_push_perp", pushPerp); } refreshCode(); });
@@ -613,9 +870,203 @@ function renderSet() {
   $("lockBtn").onclick = lockNow;
   $("cpGo").onclick = async () => { const a = $("cp1").value, b = $("cp2").value, m = $("cpMsg");
     if (a.length < 10) return m.textContent = "Use at least 10 characters."; if (a !== b) return m.textContent = "They don't match.";
-    await setPassword(a, holdings); $("cp1").value = $("cp2").value = ""; m.textContent = "Password changed."; };
+    await setPassword(a, holdings, logbook); $("cp1").value = $("cp2").value = ""; m.textContent = "Password changed."; };
   bindAlerts();
 }
+
+// ---------- Analyze: any listed spot coin on any of the three exchanges, full check on demand ----------
+const A = {ex: null, coin: ls("okx_a_coin", "BTC"), q: "", busy: false, res: null, err: null, step: ""};
+function refLevels(c, p) { if (c.length < WARMUP) return null; const ind = indicators(c), j = c.length - 1; return levels(c, ind, j, p); }
+async function runAnalysis() {
+  const E = EX[A.ex], coin = A.coin, inst = E.spotId(coin);
+  if (!inst) { A.err = `${E.label} has no ${coin}/${E.quote} spot pair.`; return renderAnalyze(); }
+  A.busy = true; A.err = null; A.res = null; renderAnalyze();
+  const st = s => { A.step = s; const el = $("aStep"); if (el) el.textContent = s; };
+  try {
+    st("price…"); const tick = await E.ticker(inst);
+    st("1H direction…"); const h1 = await E.candles(inst, "1H"), bias = biasDetail(h1, "1H"), gate = gateFn(h1, "1H");
+    const day = [];
+    for (const tf of DAY_TFS) {
+      st(tf + " entries…"); const c = await E.candles(inst, tf);
+      day.push({tf, n: c.length, sig: latestSignal(c, tf, gate, DAY), ref: refLevels(c, DAY), sum: summary(backtest(c, tf, gate, DAY, E.fees.spot))});
+    }
+    st("swing 1D/4H…"); const d1 = await E.candles(inst, "1D"), c4 = await E.candles(inst, "4H"), g1d = gateFn(d1, "1D");
+    const swing = {bias: biasDetail(d1, "1D"), sig: latestSignal(c4, "4H", g1d, SWING), ref: refLevels(c4, SWING), sum: summary(backtest(c4, "4H", g1d, SWING, E.fees.spot)), n: c4.length};
+    let perp = null, perpNote = "";
+    if (E.perpInBrowser && E.perpId(coin)) { st("contracts…"); try { perp = await perpRows(E, coin); } catch (e) { perpNote = `Couldn't load ${E.label} contract data: ${e.message}`; } }
+    else if (!E.perpInBrowser) { if (S.feed === null) await loadFeed(); perp = perpFromFeed(coin);
+      if (!perp) perpNote = MK.kraken && MK.kraken.perp && MK.kraken.perp[coin] ? `Kraken Futures lists ${coin} (${MK.kraken.perp[coin]}), but its API blocks browser reads (no CORS). The box analyses Kraken contracts for your watchlist coins: add ${coin} to the watchlist and send a fresh alert code.` : `Kraken Futures has no ${coin} perpetual.`; }
+    else perpNote = `${E.label} has no ${coin} ${E.perpName}.`;
+    A.res = {E: E.name, coin, inst, tick, bias, day, swing, perp, perpNote, at: Date.now()};
+  } catch (e) { A.err = `Couldn't load ${E.label} data for ${coin}: ${e.message}. Nothing is shown instead of made-up numbers.`; }
+  A.busy = false; renderAnalyze();
+}
+function aCoins() {
+  const m = MK[A.ex]; if (!m) return [];
+  const q = A.q.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""), all = Object.keys(m.spot);
+  const hit = q ? all.filter(c => c.includes(q)).sort((a, b) => (b.startsWith(q) - a.startsWith(q)) || a.length - b.length || a.localeCompare(b)) : watch.filter(c => m.spot[c]);
+  return hit.slice(0, 30);
+}
+function lvCell(s, ref) {
+  const L = s || ref; if (!L) return `<td colspan="4" class="mut sm">not enough candles</td>`;
+  const cls = s ? "" : "mut";
+  return `<td class="n ${cls}">${px(L.entry)}</td><td class="n ${s ? "grn" : cls}">${px(L.tp)}</td><td class="n ${s ? "red" : cls}">${px(L.sl)}</td><td class="n ${cls}">1:${L.rr.toFixed(1)}</td>`;
+}
+function renderAnalyze() {
+  const el = $("v-an"); if (!el) return;
+  if (!A.ex) A.ex = exName;
+  const E = EX[A.ex], m = MK[A.ex], R = A.res && A.res.E === A.ex ? A.res : null;
+  const list = aCoins();
+  let out = `<div class="card"><h2>Analyze any coin</h2>
+    <div class="row"><span class="sm mut">Exchange</span>${exChips("data-aex", A.ex)}</div>
+    <div class="addrow"><input class="f" id="aQ" placeholder="Search ${m ? Object.keys(m.spot).length + " " : ""}${E.label} spot pairs, e.g. PEPE" autocapitalize="characters" value="${esc(A.q)}"><button class="btn" id="aGo" ${A.busy ? "disabled" : ""}>${A.busy ? "Analyzing…" : "Analyze " + esc(A.coin)}</button></div>
+    <div class="chips" id="aList">${!m ? `<span class="sm mut">Loading the ${E.label} coin list…</span>` : list.length ? list.map(c => `<button class="chip ${c === A.coin ? "on" : ""}" data-ac="${esc(c)}">${esc(c)}</button>`).join("") : `<span class="sm mut">No ${E.label} ${E.quote} spot pair matches.</span>`}</div>
+    <p class="xs mut" style="margin:.5rem 0 0">Runs the full check on ${E.label}'s own data: 1H day direction, entries on 1m-30m, swing (1D direction, 4H entries) and the long contract setup where ${E.label} has one, each with entry, TP, SL and R:R, plus paper results after ${E.label} fees. <span id="aStep">${A.busy ? esc(A.step) : ""}</span></p></div>`;
+  if (A.err) out += `<div class="banner bn-red">${esc(A.err)}</div>`;
+  if (R) {
+    const t = R.tick;
+    const tot = R.day.reduce((a, r) => ({n: a.n + (r.sum.n || 0), net: a.net + (r.sum.net || 0)}), {n: 0, net: 0});
+    out += `<div class="card"><div class="row"><h2 style="margin:0">${esc(R.coin)}/${E.quote} · ${E.label}</h2><span class="sp"></span><span class="xs mut">${tmd(R.at)} AMS</span></div>
+      <div class="row" style="margin:.4rem 0"><span class="px" style="font-size:1.4rem;font-weight:800">${px(t.last)}</span><span class="sm ${t.last >= t.open ? "grn" : "red"}">${pct((t.last / t.open - 1) * 100)} ${esc(t.openLabel)}</span></div>
+      <div class="row"><b>Day direction (1H)</b>${biasPill(R.bias.bias)}<span class="xs mut">${esc(biasWhy(R.bias))}</span></div>
+      <p class="xs mut" style="margin:.4rem 0 0">Prices from <b>${E.label}</b> (${esc(R.inst)}). Fees: ${esc(E.feeNote)} · <a href="${E.feeSrc}" target="_blank" rel="noopener">source</a>. Other exchanges' prices differ slightly.</p></div>
+    <div class="card"><h2>Day entries · 1m-30m</h2>
+      <div class="scroll"><table class="tbl"><tr><th>TF</th><th>Now</th><th class="n">Entry</th><th class="n">TP</th><th class="n">SL</th><th class="n">R:R</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Net</th></tr>
+      ${R.day.map(r => `<tr><td><b>${r.tf}</b></td><td class="sm">${r.sig ? `<span class="pill p-long">LONG</span>` : R.bias.bias !== "long" ? `<span class="mut">1H not long</span>` : `<span class="mut">no setup</span>`}</td>${lvCell(r.sig, r.ref)}<td class="n">${r.sum.n || 0}</td><td class="n">${r.sum.n ? r.sum.win.toFixed(0) + "%" : "-"}</td><td class="n ${r.sum.net >= 0 ? "grn" : "red"}">${r.sum.n ? pct(r.sum.net) : "-"}</td></tr>`).join("")}</table></div>
+      <p class="xs mut">Green/red levels = a live LONG signal. Grey = reference levels only (close of the last candle ± ATR), not a signal: no trade without a signal. Paper: last 300 candles per timeframe, after ${fee2(E.fees.spot)} per side. All day timeframes: ${tot.n} trades, ${pct(tot.net)} net.</p>
+      ${R.day.filter(r => r.sig).map(r => sigCard(Object.assign({pair: R.coin, ex: R.E, tf: r.tf, kind: "day"}, r.sig))).join("")}</div>
+    <div class="card"><h2>Swing · 1D direction, 4H entries</h2><div class="row"><b>1D</b>${biasPill(R.swing.bias.bias)}<span class="xs mut">${esc(biasWhy(R.swing.bias))}</span></div>
+      ${R.swing.sig ? sigCard(Object.assign({pair: R.coin, ex: R.E, tf: "4H", kind: "swing"}, R.swing.sig)) : `<div class="scroll"><table class="tbl"><tr><th>4H</th><th class="n">Entry</th><th class="n">TP</th><th class="n">SL</th><th class="n">R:R</th></tr><tr><td class="sm mut">no setup · ref</td>${lvCell(null, R.swing.ref)}</tr></table></div>`}
+      <div class="scroll"><table class="tbl"><tr><th>Paper 4H</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr><tr><td class="sm">${R.swing.n} candles</td>${sumCells(R.swing.sum)}</tr></table></div></div>
+    <div class="card"><h2>Contracts · long only, max ${MAX_LEV}x</h2>
+      <div class="row"><span class="sm mut">Leverage</span><div class="chips">${[1, 2, 3].map(l => `<button class="chip ${l === lev ? "on" : ""}" data-alev="${l}">${l}x</button>`).join("")}</div></div>
+      ${R.perp ? perpBody(R.perp, E, lev) : `<p class="sm mut">${esc(R.perpNote)}</p>`}
+      <p class="xs red" style="margin:.4rem 0 0">Leverage multiplies losses. Isolated margin, a stop-loss on every trade, never more than 3x.</p></div>
+    <div class="banner bn-amb">Signals only: you place every trade yourself, always with a stop-loss. 1-2 minute timeframes are mostly noise. Start on a demo account.</div>`;
+  }
+  el.innerHTML = out;
+  el.querySelectorAll("[data-aex]").forEach(b => b.onclick = async () => { A.ex = b.dataset.aex; A.res = null; A.err = null; renderAnalyze();
+    try { await loadMarkets(A.ex); } catch (e) { A.err = `Couldn't load the ${EX[A.ex].label} coin list: ${e.message}`; } renderAnalyze(); });
+  el.querySelectorAll("[data-ac]").forEach(b => b.onclick = () => { A.coin = b.dataset.ac; lsSet("okx_a_coin", A.coin); runAnalysis(); });
+  el.querySelectorAll("[data-alev]").forEach(b => b.onclick = () => { lev = +b.dataset.alev; lsSet("okx_lev", lev); renderAnalyze(); });
+  const q = $("aQ");
+  q.oninput = () => { A.q = q.value; const l = $("aList"); const cs = aCoins();
+    l.innerHTML = cs.length ? cs.map(c => `<button class="chip ${c === A.coin ? "on" : ""}" data-ac="${esc(c)}">${esc(c)}</button>`).join("") : `<span class="sm mut">No ${E.label} ${E.quote} spot pair matches.</span>`;
+    l.querySelectorAll("[data-ac]").forEach(b => b.onclick = () => { A.coin = b.dataset.ac; lsSet("okx_a_coin", A.coin); runAnalysis(); }); };
+  q.onkeydown = e => { if (e.key === "Enter") { const c = normCoin(q.value) || aCoins()[0]; if (c) { A.coin = c; lsSet("okx_a_coin", c); runAnalysis(); } } };
+  $("aGo").onclick = () => { const c = normCoin(A.q); if (c && MK[A.ex] && MK[A.ex].spot[c]) A.coin = c; lsSet("okx_a_coin", A.coin); runAnalysis(); };
+  if (!m && !A.busy) loadMarkets(A.ex).then(renderAnalyze, e => { A.err = `Couldn't load the ${E.label} coin list: ${e.message}`; renderAnalyze(); });
+}
+
+// ---------- Logbook tab ----------
+let logbook = [], logEdit = null, logPre = null, logMsg = "";
+const qOf = ex => (EX[ex] || X).quote;
+const feeOf = t => (EX[t.ex] || X).fees[t.market === "perp" ? "perp" : "spot"];
+const amt = (v, q) => v == null || !isFinite(v) ? "-" : (v >= 0 ? "+" : "") + v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: Math.abs(v) < 1 ? 4 : 2}) + (q ? " " + q : "");
+function signalChoices() {
+  const out = [], add = (ex, coin, tf, kind, s, src) => s && out.push({ex, pair: coin, tf, kind, entry: s.entry, sl: s.sl, tp: s.tp, t: s.t,
+    label: `${EX[ex].label} ${coin} ${kind === "perp" ? "contract " : ""}${tf} LONG @ ${px(s.entry)} · ${tmd(s.t)}${src ? " · " + src : ""}`});
+  (S.sigs || []).forEach(s => add(exName, s.pair, s.tf, "day", s, "app"));
+  listed().forEach(c => S.swing[c] && add(exName, c, "4H", "swing", S.swing[c].sig, "app"));
+  if (S.perp && S.perp.rows) S.perp.rows.forEach(r => add(exName, S.perp.pair, r.tf, "perp", r.sig, "app"));
+  if (A.res) { A.res.day.forEach(r => add(A.res.E, A.res.coin, r.tf, "day", r.sig, "Analyze")); add(A.res.E, A.res.coin, "4H", "swing", A.res.swing.sig, "Analyze"); }
+  ((S.feed && S.feed.alerts) || []).slice(0, 20).forEach(a => add(a.exchange || "okx", a.pair, a.tf, a.market === "perp" ? "perp" : a.setup, {entry: a.entry, sl: a.sl, tp: a.tp, t: a.candle + TF_MS[a.tf]}, "box"));
+  const seenL = new Set(); return out.filter(o => !seenL.has(o.label) && seenL.add(o.label)).slice(0, 30);
+}
+const setupOf = (tf, kind) => kind === "perp" ? "contract " + tf : kind === "swing" ? "4H swing" : tf;
+function logForm() {
+  const t = logEdit && logEdit !== "new" ? logbook.find(x => x.id === logEdit) : null, p = logPre || {};
+  const v = (k, d = "") => esc(t ? (t[k] ?? d) : (p[k] ?? d));
+  const opt = (vals, cur) => vals.map(([val, lab]) => `<option value="${val}" ${val === cur ? "selected" : ""}>${lab}</option>`).join("");
+  const sigs = signalChoices(); window._logSigs = sigs;
+  const market = t ? t.market : p.kind === "perp" ? "perp" : "spot";
+  return `<div class="card" id="logFormCard"><h2>${t ? "Edit trade" : "Log a trade you placed"}</h2>
+    ${t ? "" : `<label class="xs mut">Linked signal (fills the form)</label><select class="f" id="lSig" style="width:100%"><option value="">None / my own idea</option>${sigs.map((s, i) => `<option value="${i}" ${p.label === s.label ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select>`}
+    <div class="lgrid">
+      <label>Opened (Amsterdam)<input class="f" id="lT" value="${esc(t ? msToAms(t.t) : msToAms(Date.now()))}" placeholder="2026-11-02 14:30"></label>
+      <label>Exchange<select class="f" id="lEx">${opt(LOG_EX.map(e => [e, EX[e].label]), t ? t.ex : p.ex || exName)}</select></label>
+      <label>Coin<input class="f" id="lPair" value="${v("pair")}" placeholder="BTC" autocapitalize="characters"></label>
+      <label>Type<select class="f" id="lMk">${opt([["spot", "Spot"], ["perp", "Contract"]], market)}</select></label>
+      <label>Leverage<input class="f" id="lLev" type="number" inputmode="decimal" value="${v("lev", market === "perp" ? 2 : "")}" placeholder="2"></label>
+      <label>Side<select class="f" id="lSide">${opt([["long", "Long"], ["short", "Short (contract)"]], t ? t.side : "long")}</select></label>
+      <label>Entry<input class="f" id="lEntry" type="number" inputmode="decimal" step="any" value="${v("entry")}"></label>
+      <label>Size (coins)<input class="f" id="lSize" type="number" inputmode="decimal" step="any" value="${v("size")}"></label>
+      <label>Stop-loss<input class="f" id="lSl" type="number" inputmode="decimal" step="any" value="${v("sl")}"></label>
+      <label>Take-profit<input class="f" id="lTp" type="number" inputmode="decimal" step="any" value="${v("tp")}"></label>
+      <label>Exit (empty = open)<input class="f" id="lExit" type="number" inputmode="decimal" step="any" value="${v("exit")}"></label>
+      <label>Closed (Amsterdam)<input class="f" id="lTc" value="${esc(t && t.tc ? msToAms(t.tc) : "")}" placeholder="when you closed"></label>
+      <label>Fees paid (empty = estimate)<input class="f" id="lFees" type="number" inputmode="decimal" step="any" value="${v("fees")}"></label>
+      <label>Setup / timeframe<select class="f" id="lSetup">${opt(LOG_SETUPS.map(s => [s, s]), t ? t.setup : p.tf ? setupOf(p.tf, p.kind) : "manual")}</select></label>
+    </div>
+    <input type="hidden" id="lSignal" value="${v("signal", p.label || "")}">
+    <label class="xs mut">Notes</label><textarea class="f" id="lNotes" rows="2" style="width:100%">${v("notes")}</textarea>
+    <label class="row sm" style="margin:.4rem 0"><input type="checkbox" id="lHold" ${market === "spot" ? "checked" : ""}> Update my Portfolio holdings (spot longs: buying adds, closing sells)</label>
+    <div class="row"><button class="btn" id="lSave">${t ? "Save changes" : "Add to logbook"}</button>${logEdit ? `<button class="btn ghost" id="lCancel">Cancel</button>` : ""}<span class="sm red" id="lErr"></span></div>
+    <p class="xs mut">Fees left empty are estimated with ${"the exchange's"} standard taker fee per side. Leverage above ${MAX_LEV}x is over this desk's limit: it's logged, but flagged.</p></div>`;
+}
+function tradeRow(t) {
+  const c = tradeCalc(t, feeOf(t)), q = qOf(t.ex), lv = t.market === "perp" ? ` ${t.lev}x` : "";
+  return `<div class="sig"><div class="row"><b>${esc(t.pair)}</b><span class="pill ${t.side === "long" ? "p-long" : "p-short"}">${t.side.toUpperCase()}</span><span class="sm">${t.market === "perp" ? "contract" + lv : "spot"} · ${esc(EX[t.ex].label)} · ${esc(t.setup)}</span>
+    ${t.lev > MAX_LEV ? `<span class="pill p-short">OVER ${MAX_LEV}x</span>` : ""}<span class="sp"></span><span class="xs mut">${esc(msToAms(t.t))}</span></div>
+    <div class="lv"><div>Entry<b>${px(t.entry)}</b></div><div>Exit<b>${c.open ? "open" : px(t.exit)}</b></div><div>P/L<b class="${c.open ? "" : c.pnl >= 0 ? "grn" : "red"}">${c.open ? "-" : amt(c.pnl, q)}</b></div><div>% · R<b>${c.open ? "-" : pct(c.pct, 2) + " · " + (c.r == null ? "-" : c.r.toFixed(2) + "R")}</b></div></div>
+    <div class="xs mut" style="margin-top:.35rem">Size ${t.size} · SL ${t.sl ? px(t.sl) : "none"} · TP ${t.tp ? px(t.tp) : "-"}${c.plannedRR ? ` (plan 1:${c.plannedRR.toFixed(1)})` : ""} · fees ${amt(c.fees, q).replace("+", "")}${c.feesEst ? " est." : ""}${t.signal ? " · signal: " + esc(t.signal) : ""}${t.notes ? `<br>${esc(t.notes)}` : ""}</div>
+    ${!t.sl ? `<div class="xs red">No stop-loss logged: always use one.</div>` : ""}
+    <div class="row" style="margin-top:.4rem"><button class="chip" data-ledit="${t.id}">${c.open ? "Close / edit" : "Edit"}</button><button class="chip" data-ldel="${t.id}">Delete</button></div></div>`;
+}
+function paperFor(setup) {
+  const w = S.feed && S.feed.weekly; if (!w) return null;
+  const tf = setup === "4H swing" ? "4H" : setup; const r = w.tfs && w.tfs[tf]; return r ? {s: r.backtest, label: w.label || "OKX"} : null;
+}
+function renderLog() {
+  const el = $("v-log");
+  const rows = logbook.map(t => ({t, c: tradeCalc(t, feeOf(t))})), closed = rows.filter(x => !x.c.open), st = logStats(closed);
+  const groups = {}; closed.forEach(x => (groups[x.t.setup] = groups[x.t.setup] || []).push(x));
+  const qs = [...new Set(closed.map(x => qOf(x.t.ex)))].join("/");
+  const stats = st.n ? `<div class="sig"><div class="lv" style="grid-template-columns:repeat(3,1fr)"><div>Closed trades<b>${st.n}</b></div><div>Win rate<b>${st.win.toFixed(0)}%</b></div><div>Avg R<b>${st.avgR == null ? "-" : st.avgR.toFixed(2) + "R"}</b></div>
+      <div>Total P/L<b class="${st.pnl >= 0 ? "grn" : "red"}">${amt(st.pnl, qs)}</b></div><div>Best<b class="grn">${amt(st.best.c.pnl)}</b></div><div>Worst<b class="red">${amt(st.worst.c.pnl)}</b></div></div></div>
+    <p class="xs mut">Fees paid ${amt(st.fees).replace("+", "")} ${qs} · avg ${pct(st.avgPct, 2)} per trade on capital used. R uses ${st.nR} trades with a stop-loss.</p>
+    <div class="scroll"><table class="tbl"><tr><th>Setup</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">P/L</th><th class="n">App paper</th></tr>
+    ${Object.entries(groups).map(([k, g]) => { const s = logStats(g), pp = paperFor(k);
+      return `<tr><td><b>${esc(k)}</b></td><td class="n">${s.n}</td><td class="n">${s.win.toFixed(0)}%</td><td class="n">${s.avgR == null ? "-" : s.avgR.toFixed(2)}</td><td class="n ${s.pnl >= 0 ? "grn" : "red"}">${amt(s.pnl)}</td>
+        <td class="n xs">${pp && pp.s.n ? `${pp.s.win.toFixed(0)}% · ${pp.s.avg_r.toFixed(2)}R` : "-"}</td></tr>`; }).join("")}</table></div>
+    <p class="xs mut">App paper = the box's weekly paper results for that timeframe (${esc((S.feed && S.feed.weekly && S.feed.weekly.label) || "box")}, all watchlist coins, after fees): win rate · avg R. If you do clearly worse than paper, check entries, stops and fees.</p>`
+    : `<p class="sm mut">No closed trades yet. Stats, win rate, P/L and R appear here once you log a closed trade.</p>`;
+  el.innerHTML = `<div class="split"><div>${logForm()}</div><div>
+    <div class="card"><h2>Logbook stats</h2>${stats}</div>
+    <div class="card"><div class="row"><h2 style="margin:0">My trades</h2><span class="sp"></span><button class="chip" id="lCsv">Export CSV</button><button class="chip" id="lImp">Import CSV</button></div>
+      <p class="sm grn" id="lMsg">${esc(logMsg)}</p>${logbook.length ? logbook.slice().sort((a, b) => b.t - a.t).map(tradeRow).join("") : `<p class="sm mut">Nothing logged yet.</p>`}
+      <p class="xs mut">Only on this device, encrypted with your password (like holdings). Nothing goes to the box or the website. A CSV export is a plain, unencrypted file: keep it private.</p></div></div></div>`;
+  logMsg = "";
+  const sig = $("lSig"); if (sig) sig.onchange = () => { const s = window._logSigs[+sig.value]; logPre = s || null; renderLog(); };
+  const mk = $("lMk"); mk.onchange = () => { $("lHold").checked = mk.value === "spot"; if (mk.value === "perp" && !$("lLev").value) $("lLev").value = 2; };
+  if ($("lCancel")) $("lCancel").onclick = () => { logEdit = null; logPre = null; renderLog(); };
+  $("lSave").onclick = async () => {
+    const g = id => $(id).value, err = m => $("lErr").textContent = m;
+    const old = logEdit && logEdit !== "new" ? logbook.find(x => x.id === logEdit) : null;
+    let t; try { t = validTrade({id: old && old.id, t: g("lT"), tc: g("lTc") || null, ex: g("lEx"), pair: g("lPair"), market: g("lMk"), lev: g("lLev"), side: g("lSide"),
+      entry: g("lEntry"), exit: g("lExit"), size: g("lSize"), fees: g("lFees"), sl: g("lSl"), tp: g("lTp"), setup: g("lSetup"), signal: g("lSignal"), notes: g("lNotes")}); }
+    catch (e) { return err(e.message); }
+    if (!t.tc && t.exit != null) t.tc = Date.now();
+    if ($("lHold").checked) {
+      const wasOpen = !old || old.exit == null, nowOpen = t.exit == null;
+      if (!old && nowOpen) holdings = holdingsAfter(holdings, t, false);
+      else if (old && wasOpen && !nowOpen) holdings = holdingsAfter(holdings, t, true);
+      await saveHoldings(holdings);
+    }
+    logbook = old ? logbook.map(x => x.id === old.id ? t : x) : [...logbook, t];
+    await saveLog(logbook); logMsg = old ? "Saved." : "Added."; logEdit = null; logPre = null; renderLog();
+  };
+  el.querySelectorAll("[data-ledit]").forEach(b => b.onclick = () => { logEdit = b.dataset.ledit; logPre = null; renderLog(); $("logFormCard").scrollIntoView({behavior: "smooth"}); });
+  el.querySelectorAll("[data-ldel]").forEach(b => b.onclick = async () => { if (!confirm("Delete this trade from the logbook?")) return; logbook = logbook.filter(x => x.id !== b.dataset.ldel); await saveLog(logbook); logMsg = "Deleted."; renderLog(); });
+  $("lCsv").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([logToCsv(logbook, feeOf)], {type: "text/csv"})); a.download = `okx-desk-logbook-${msToAms(Date.now()).slice(0, 10)}.csv`; a.click(); };
+  $("lImp").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = ".csv,text/csv"; i.id = "lImpFile"; i.style.display = "none"; document.body.appendChild(i);
+    i.onchange = async () => { try { const r = csvToTrades(await i.files[0].text()), ids = new Set(logbook.map(x => x.id));
+        const fresh = r.ok.filter(x => !ids.has(x.id)); logbook = [...logbook, ...fresh]; await saveLog(logbook);
+        logMsg = `Imported ${fresh.length} trade(s)` + (r.ok.length - fresh.length ? `, ${r.ok.length - fresh.length} already there` : "") + (r.bad.length ? `; skipped ${r.bad.length}: ${r.bad.slice(0, 3).join("; ")}` : "") + ".";
+      } catch (e) { logMsg = "Import failed: " + e.message; } i.remove(); renderLog(); }; i.click(); };
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-log]"); if (!b) return;
+  try { logPre = JSON.parse(b.dataset.log); logPre.label = `${EX[logPre.ex].label} ${logPre.pair} ${logPre.kind === "perp" ? "contract " : ""}${logPre.tf} LONG @ ${px(logPre.entry)} · ${tmd(logPre.t)}`; logEdit = null; show("log"); } catch (x) {} });
 
 // ---------- push registration (code -> Grok Bot -> box; the box sends the pushes) ----------
 const pushOK = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -640,7 +1091,7 @@ async function makeCode() {
   let sub = await reg.pushManager.getSubscription();
   if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64uDec(KEYS.vapid)});
   const j = sub.toJSON();
-  pushCode = "OKX1." + b64uEnc(new TextEncoder().encode(JSON.stringify({e: j.endpoint, p: j.keys.p256dh, a: j.keys.auth, f: pushTfs, w: watch, s: pushSwing, c: pushPerp})));
+  pushCode = "OKX1." + b64uEnc(new TextEncoder().encode(JSON.stringify({e: j.endpoint, p: j.keys.p256dh, a: j.keys.auth, f: pushTfs, w: watch, s: pushSwing, c: pushPerp, x: exName})));
   localStorage.setItem("okx_push_code", pushCode); renderSet();
 }
 function bindAlerts() {
@@ -653,23 +1104,27 @@ function bindAlerts() {
 }
 
 // ---------- shell ----------
-const RENDER = {day: renderDay, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
+const RENDER = {day: renderDay, an: renderAnalyze, log: renderLog, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
 function show(v) { view = v; lsSet("okx_view", v); document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v)); document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); RENDER[v](); refresh(true); }
-let busy = false;
+let busy = false, again = false;
 async function refresh(force) {
-  if (busy || (!force && document.hidden)) return; busy = true;
+  if (busy) { if (force) again = true; return; }
+  if (!force && document.hidden) return; busy = true;
   const v = view;
   try {
     const all = [];
+    if (v === "an" || v === "log") { if (!S.feed) await loadFeed(); return; }
+    const ex0 = exName;
     try { await loadDay(); S.err.day = null; all.push(...S.sigs); } catch (e) { S.err.day = e.message; }
     if (v === "swing" || Date.now() - S.swAt > 600000) { try { await loadSwing(); S.err.swing = null; } catch (e) { S.err.swing = e.message; } }
-    watch.forEach(p => S.swing[p] && S.swing[p].sig && all.push(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
-    if (v === "perp") { try { all.push(...await loadPerp()); S.err.perp = null; } catch (e) { S.err.perp = e.message; } }
+    listed().forEach(p => S.swing[p] && S.swing[p].sig && all.push(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
+    if (v === "perp") { try { if (!X.perpInBrowser && !S.feed) await loadFeed(); all.push(...await loadPerp()); S.err.perp = null; } catch (e) { S.err.perp = e.message; } }
     if (v === "port") { try { await loadPort(); S.err.port = null; } catch (e) { S.err.port = e.message; } }
     if (!S.feed || Date.now() - S.at > 300000) await loadFeed();
+    if (ex0 !== exName) return;                     // switched exchange mid-load: the new load takes over
     announce(all); firstPass = false; S.at = Date.now();
-  } finally { busy = false; }
-  $("upd").textContent = S.err.day ? "OKX data error" : "Live OKX · " + tm(Date.now()) + " AMS";
+  } finally { busy = false; if (again) { again = false; setTimeout(() => refresh(true), 0); } }
+  $("upd").textContent = (view === "an" || view === "log") ? (view === "log" ? "Logbook · " : "Analyze · ") + tm(Date.now()) : S.err.day ? "data error" : "Live · " + tm(Date.now());
   if (view === v) RENDER[v]();
 }
 const THEMES = ["auto", "dark", "light"];
@@ -681,6 +1136,10 @@ let started = false;
 async function start() {
   if (started) return; started = true;
   holdings = await loadHoldings();
+  logbook = await loadLog();
+  $("exSel").value = exName; $("exSel").onchange = e => setExchange(e.target.value);
+  try { await loadMarkets(exName); } catch (e) { S.err.day = "couldn't load the " + X.label + " coin list: " + e.message; }
+  if (!X.spotId(sel)) sel = listed()[0] || sel;
   $("tabs").style.display = ""; $("app").style.display = "";
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.v));
   registerSW(); show(RENDER[view] ? view : "day");
