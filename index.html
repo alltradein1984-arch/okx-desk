@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https://www.okx.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#07090c">
+<title>OKX Desk</title>
+<script>
+(function () { try {
+  const p = localStorage.getItem("okx_theme") || "auto";
+  const h = +new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Europe/Amsterdam" }).format(new Date());
+  document.documentElement.dataset.theme = p === "light" || p === "dark" ? p : (h >= 22 || h < 7 ? "light" : "dark");
+} catch (e) {} })();
+</script>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#07090c;--card:#11151b;--card2:#171c24;--line:#232a35;--txt:#e9edf2;--mut:#8a94a3;--grn:#2fd27a;--red:#ff5468;--amb:#ffb648;--blu:#5aa9ff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;background:rgba(7,9,12,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:1.1rem;letter-spacing:.05em;white-space:nowrap}
+.badge{white-space:nowrap}
+header .upd{margin-left:auto;color:var(--mut);font-size:.8rem;text-align:right}
+.badge{font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;letter-spacing:.06em}
+.b-paper{background:#2a2410;color:var(--amb);border:1px solid #5a4614}
+main{max-width:1280px;margin:0 auto;padding:1rem}
+.view{display:none}.view.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin-bottom:.9rem}
+.card h2{margin:0 0 .6rem;font-size:1rem}.card h3{margin:.8rem 0 .4rem;font-size:.9rem}
+.mut{color:var(--mut)}.sm{font-size:.82rem}.xs{font-size:.74rem}.grn{color:var(--grn)}.red{color:var(--red)}.amb{color:var(--amb)}
+.row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}.sp{flex:1}
+.banner{border-radius:14px;padding:.75rem .9rem;margin-bottom:.7rem;font-weight:600}
+.bn-red{background:#2a0f15;border:1px solid #5c1d29;color:#ffb3bd}.bn-amb{background:#2a200d;border:1px solid #5a4614;color:#ffd59a}
+.bn-grn{background:#0d2219;border:1px solid #1b4a33;color:#9ff0c4}.bn-blu{background:#0e1a2a;border:1px solid #1e3a5c;color:#b5d5ff}
+.banner ul{margin:.3rem 0 0;padding-left:1.1rem;font-weight:500}.banner li{margin:.15rem 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem}
+.tile{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:.7rem;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.tile.sel{outline:2px solid var(--blu)}
+.tile b{display:block;font-size:.95rem}.tile .px{font-size:1.05rem;font-weight:700;margin:.2rem 0}
+.pill{display:inline-block;font-size:.72rem;font-weight:800;padding:.18rem .55rem;border-radius:99px;letter-spacing:.04em}
+.p-long{background:#0f2a1d;color:var(--grn);border:1px solid #1d5a3b}.p-short{background:#2c1016;color:var(--red);border:1px solid #63202d}
+.p-neutral{background:#222a35;color:var(--mut);border:1px solid #2c3542}.p-amb{background:#2a2410;color:var(--amb);border:1px solid #5a4614}
+.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
+.tbl th{text-align:left;color:var(--mut);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;padding:.35rem .4rem;border-bottom:1px solid var(--line)}
+.tbl td{padding:.45rem .4rem;border-bottom:1px solid var(--line);vertical-align:top}.tbl tr:last-child td{border:0}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sig{border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:.7rem .8rem;margin-bottom:.55rem}
+.sig .lv{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.45rem}
+.sig .lv div{font-size:.72rem;color:var(--mut)}.sig .lv b{display:block;font-size:.92rem;color:var(--txt);font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:99px;padding:.35rem .75rem;font-size:.82rem;cursor:pointer}
+.chip.on{background:#10263f;border-color:#1e4d80;color:#9cc9ff}
+.btn{display:inline-block;border:0;cursor:pointer;font-weight:700;font-size:.85rem;color:#06110b;background:var(--grn);padding:.5rem .85rem;border-radius:10px}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}.btn.warn{background:var(--red);color:#fff}
+input.f{font:inherit;font-size:.9rem;padding:.55rem .7rem;border-radius:.6rem;border:1px solid var(--line);background:var(--card2);color:var(--txt);min-width:0}
+input.f:focus{outline:2px solid #3b82f6;outline-offset:1px}
+.addrow{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}.addrow input{flex:1 1 7rem}
+.rule{padding:.5rem 0;border-bottom:1px solid var(--line)}.rule:last-child{border:0}.rule b{display:block;font-size:.88rem}
+.rule span{font-size:.82rem;color:var(--mut)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom));z-index:20;background:#10263f;color:#cfe4ff;border:1px solid #1e4d80;border-radius:12px;padding:.6rem .9rem;font-size:.85rem;display:none;max-width:92vw}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:rgba(10,13,17,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;background:none;border:0;color:var(--mut);padding:.55rem 0 .6rem;font-size:.7rem;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav.tabs button svg{width:22px;height:22px}nav.tabs button.on{color:var(--txt)}
+#lock{display:none;max-width:420px;margin:0 auto;padding:3rem 1rem}
+#lock .card{padding:1.3rem}#lock input{width:100%;margin:.35rem 0}
+.split{display:block}
+html[data-theme="light"]{--bg:#f4f6f9;--card:#ffffff;--card2:#eef1f5;--line:#dde3ea;--txt:#11161d;--mut:#5d6775;--grn:#0e9f56;--red:#d42c43;--amb:#a86a0c;--blu:#1f6fd1}
+html[data-theme="light"] header{background:rgba(244,246,249,.93)}html[data-theme="light"] nav.tabs{background:rgba(255,255,255,.97)}
+html[data-theme="light"] .b-paper,html[data-theme="light"] .p-amb{background:#fff4dd;border-color:#f0cf8a}
+html[data-theme="light"] .bn-red{background:#ffeef0;border-color:#f5b5bf;color:#9b1c2e}html[data-theme="light"] .bn-amb{background:#fff6e5;border-color:#f0d39a;color:#7a4d06}
+html[data-theme="light"] .bn-grn{background:#e8f8ef;border-color:#a9e2c2;color:#0b6b3b}html[data-theme="light"] .bn-blu{background:#eaf2fd;border-color:#b5d0f3;color:#1a4f93}
+html[data-theme="light"] .p-long{background:#e2f6ea;border-color:#a9e2c2}html[data-theme="light"] .p-short{background:#ffe8eb;border-color:#f5b5bf}
+html[data-theme="light"] .p-neutral{background:#e8ecf1;border-color:#d3dae3}
+html[data-theme="light"] .chip.on{background:#e3efff;border-color:#b5d0f3;color:#1a4f93}html[data-theme="light"] #toast{background:#e3efff;color:#1a4f93;border-color:#b5d0f3}
+html[data-theme="light"] .btn{color:#fff}html[data-theme="light"] .btn.ghost{color:var(--txt)}
+#theme{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:99px;font-size:.72rem;padding:.2rem .6rem;cursor:pointer}
+@media (min-width:960px){
+  body{padding-bottom:0}
+  nav.tabs{position:sticky;top:53px;bottom:auto;justify-content:center;border-top:0;border-bottom:1px solid var(--line);background:var(--bg)}
+  nav.tabs button{flex:none;width:130px;flex-direction:row;justify-content:center;gap:.4rem;font-size:.85rem;padding:.7rem 0}
+  nav.tabs button svg{width:18px;height:18px}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start}
+  #toast{bottom:1.2rem}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>OKX DESK</h1><span class="badge b-paper">SIGNALS · PAPER</span>
+  <div class="upd" id="upd"></div>
+  <button id="theme" title="Theme: Auto = light 22:00-07:00, dark in the day">Auto</button>
+</header>
+<div id="lock"></div>
+<nav class="tabs" id="tabs" style="display:none">
+  <button data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Day</button>
+  <button data-v="swing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12c3-6 6-6 9 0s6 6 9 0"/></svg>Swing</button>
+  <button data-v="perp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V3M5 10l7-7 7 7"/></svg>Contracts</button>
+  <button data-v="port"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Portfolio</button>
+  <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
+</nav>
+<main id="app" style="display:none">
+  <section class="view" id="v-day"></section>
+  <section class="view" id="v-swing"></section>
+  <section class="view" id="v-perp"></section>
+  <section class="view" id="v-port"></section>
+  <section class="view" id="v-set"></section>
+</main>
+<div id="toast"></div>
+<script>
+"use strict";
+// ==STRATEGY==  (twin of strategy.py - tests/test_parity.py runs both on the same candles)
+const TF_MS = {"1m":60000,"2m":120000,"5m":300000,"10m":600000,"15m":900000,"20m":1200000,"30m":1800000,"1H":3600000,"4H":14400000,"1D":86400000,"1W":604800000};
+const DAY = {sl:1.5, tp:3.0, max_bars:48, fresh:3}, SWING = {sl:2.0, tp:4.0, max_bars:60, fresh:2}, WARMUP = 60;
+function ema(xs, n) { const k = 2 / (n + 1), out = []; let e = null; for (const x of xs) { e = e === null ? x : x * k + e * (1 - k); out.push(e); } return out; }
+function rsi(cl, n = 14) {
+  const out = new Array(cl.length).fill(null); if (cl.length <= n) return out;
+  let g = 0, l = 0; for (let i = 1; i <= n; i++) { const d = cl[i] - cl[i-1]; g += Math.max(d, 0); l += Math.max(-d, 0); }
+  let ag = g / n, al = l / n; out[n] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+  for (let i = n + 1; i < cl.length; i++) { const d = cl[i] - cl[i-1]; ag = (ag * (n-1) + Math.max(d, 0)) / n; al = (al * (n-1) + Math.max(-d, 0)) / n; out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al); }
+  return out;
+}
+function atr(c, n = 14) {
+  const out = new Array(c.length).fill(null); if (c.length <= n) return out;
+  const tr = [c[0][2] - c[0][3]]; for (let i = 1; i < c.length; i++) tr.push(Math.max(c[i][2] - c[i][3], Math.abs(c[i][2] - c[i-1][4]), Math.abs(c[i][3] - c[i-1][4])));
+  let a = 0; for (let i = 1; i <= n; i++) a += tr[i]; a /= n; out[n] = a;
+  for (let i = n + 1; i < c.length; i++) { a = (a * (n-1) + tr[i]) / n; out[i] = a; }
+  return out;
+}
+function indicators(c) { const cl = c.map(k => k[4]); return {e20: ema(cl, 20), e50: ema(cl, 50), rsi: rsi(cl), atr: atr(c)}; }
+function biasAt(c, ind, i) {
+  if (i < WARMUP || i >= c.length) return "neutral";
+  const cl = c[i][4], e20 = ind.e20[i], e50 = ind.e50[i], r = ind.rsi[i];
+  if (cl > e50 && e20 > e50 && e50 > ind.e50[i-5] && r >= 50) return "long";
+  if (cl < e50 && e20 < e50 && e50 < ind.e50[i-5] && r <= 50) return "short";
+  return "neutral";
+}
+function biasDetail(c, tf) {
+  const ind = indicators(c), i = c.length - 1;
+  if (i < WARMUP) return {bias: "neutral", why: "not enough candles"};
+  return {bias: biasAt(c, ind, i), close: c[i][4], e20: ind.e20[i], e50: ind.e50[i], e50_prev: ind.e50[i-5], rsi: ind.rsi[i], ts: c[i][0] + TF_MS[tf]};
+}
+function gateFn(gc, gtf) {
+  const ind = indicators(gc), closes = gc.map(k => k[0] + TF_MS[gtf]), biases = gc.map((_, i) => biasAt(gc, ind, i));
+  return t => { let lo = 0, hi = closes.length; while (lo < hi) { const m = (lo + hi) >> 1; if (closes[m] <= t) lo = m + 1; else hi = m; } return lo - 1 >= 0 ? biases[lo - 1] : "neutral"; };
+}
+function entryAt(c, ind, j) {
+  if (j < WARMUP || ind.atr[j] === null || ind.rsi[j-1] === null) return false;
+  const k = c[j];
+  return ind.e20[j] > ind.e50[j]
+    && Math.min(c[j-2][3] - ind.e20[j-2], c[j-1][3] - ind.e20[j-1], k[3] - ind.e20[j]) <= 0
+    && ind.rsi[j-1] < 50 && 50 <= ind.rsi[j]
+    && k[4] > ind.e20[j] && k[4] > k[1];
+}
+function levels(c, ind, j, p) { const e = c[j][4], a = ind.atr[j]; return {entry: e, sl: e - p.sl * a, tp: e + p.tp * a, rr: p.tp / p.sl, atr: a}; }
+function fundingBetween(funding, t0, t1) {
+  if (!funding || !funding.length) return 0;
+  let s = 0; for (const [t, r] of funding) if (t0 < t && t <= t1) s += r;
+  const first = funding[0][0];
+  if (t0 < first) { const avg = funding.reduce((a, x) => a + x[1], 0) / funding.length; s += avg * Math.floor((Math.min(t1, first) - t0) / 28800000); }
+  return s;
+}
+function backtest(c, tf, gate, p, fee, funding) {
+  const ind = indicators(c), trades = [], n = c.length, tfm = TF_MS[tf]; let j = WARMUP;
+  while (j < n) {
+    const tClose = c[j][0] + tfm;
+    if (entryAt(c, ind, j) && gate(tClose) === "long") {
+      const lv = levels(c, ind, j, p); let out = null, ex = null, k = j + 1;
+      while (k < n) {
+        if (c[k][3] <= lv.sl) { out = "stop"; ex = lv.sl; }
+        else if (c[k][2] >= lv.tp) { out = "target"; ex = lv.tp; }
+        else if (k - j >= p.max_bars) { out = "time"; ex = c[k][4]; }
+        if (out) break; k++;
+      }
+      if (!out) break;
+      const gross = (ex / lv.entry - 1) * 100;
+      const fund = funding != null ? fundingBetween(funding, tClose, c[k][0] + tfm) * 100 : 0;
+      const net = gross - 2 * fee * 100 - fund, risk = (lv.entry - lv.sl) / lv.entry * 100;
+      trades.push({t: tClose, entry: lv.entry, exit: ex, out, gross, fund, net, r: net / risk, bars: k - j});
+      j = k + 1; continue;
+    }
+    j++;
+  }
+  return trades;
+}
+function summary(tr) {
+  const n = tr.length; if (!n) return {n: 0};
+  const sum = f => tr.reduce((a, t) => a + f(t), 0);
+  return {n, win: tr.filter(t => t.net > 0).length / n * 100, avg_r: sum(t => t.r) / n, gross: sum(t => t.gross), net: sum(t => t.net), fees: sum(t => t.gross - t.net - t.fund), fund: sum(t => t.fund)};
+}
+function latestSignal(c, tf, gate, p) {
+  const ind = indicators(c), n = c.length, tfm = TF_MS[tf];
+  for (let j = n - 1; j >= Math.max(WARMUP, n - p.fresh); j--) {
+    const tClose = c[j][0] + tfm;
+    if (entryAt(c, ind, j) && gate(tClose) === "long") {
+      const lv = levels(c, ind, j, p);
+      for (let k = j + 1; k < n; k++) if (c[k][3] <= lv.sl || c[k][2] >= lv.tp) return null;
+      return Object.assign({}, lv, {t: tClose, candle: c[j][0], age: n - 1 - j});
+    }
+  }
+  return null;
+}
+function liquidation(entry, lev, mmr) { const liq = entry * (1 - 1 / lev + mmr); return {price: liq, dist_pct: (1 - liq / entry) * 100}; }
+function aggregate(c5, tf, nowMs) {
+  const size = TF_MS[tf], need = size / 300000, out = []; let cur = null; nowMs = nowMs || Date.now();
+  const done = x => x && x[6] === need && x[0] + size <= nowMs;
+  for (const k of c5) {
+    const b = Math.floor(k[0] / size) * size;
+    if (!cur || cur[0] !== b) { if (done(cur)) out.push(cur.slice(0, 6)); cur = [b, k[1], k[2], k[3], k[4], k[5], 1]; }
+    else { cur[2] = Math.max(cur[2], k[2]); cur[3] = Math.min(cur[3], k[3]); cur[4] = k[4]; cur[5] += k[5]; cur[6]++; }
+  }
+  if (done(cur)) out.push(cur.slice(0, 6));
+  return out;
+}
+// ==/STRATEGY==
+
+// ---------- exchange adapters (public data only; Bybit/Kraken can be added with the same methods) ----------
+const OKX_API = "https://www.okx.com/api/v5";
+let lastReq = 0, reqCount = 0;
+async function okxGet(path) {
+  const wait = lastReq + 200 - Date.now(); lastReq = Math.max(Date.now(), lastReq + 200);   // <= 5 req/s
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  reqCount++;
+  const r = await fetch(OKX_API + path, {cache: "no-store"});
+  if (!r.ok) throw new Error("OKX HTTP " + r.status);
+  const j = await r.json();
+  if (j.code !== "0") throw new Error("OKX " + j.code + (j.msg ? ": " + j.msg : ""));
+  return j.data;
+}
+const CC = {};   // candle cache: "inst|bar" -> rows (closed only, oldest first)
+const EX = {
+  okx: {
+    async candles(inst, bar) {
+      if (bar === "10m" || bar === "20m") return aggregate(await EX.okx.candles(inst, "5m"), bar);
+      const key = inst + "|" + bar, have = CC[key], b = {"1D": "1Dutc", "1W": "1Wutc"}[bar] || bar;
+      if (have && have.length && Date.now() < have[have.length - 1][0] + 2 * TF_MS[bar]) return have;
+      const lim = have && have.length ? Math.min(300, Math.floor((Date.now() - have[have.length - 1][0]) / TF_MS[bar]) + 2) : 300;
+      const d = await okxGet(`/market/candles?instId=${inst}&bar=${b}&limit=${lim}`);
+      const rows = d.filter(r => r[8] === "1").map(r => [+r[0], +r[1], +r[2], +r[3], +r[4], +r[5]]).reverse();
+      const m = new Map((have || []).map(r => [r[0], r])); rows.forEach(r => m.set(r[0], r));
+      return CC[key] = [...m.values()].sort((a, b) => a[0] - b[0]).slice(-300);
+    },
+    async ticker(inst) { const d = (await okxGet(`/market/ticker?instId=${inst}`))[0]; return {last: +d.last, open24h: +d.open24h, ts: +d.ts}; },
+    async funding(inst) { const d = await okxGet(`/public/funding-rate-history?instId=${inst}&limit=100`); return d.map(x => [+x.fundingTime, +(x.realizedRate || x.fundingRate)]).sort((a, b) => a[0] - b[0]); },
+    async fundingNow(inst) { const d = (await okxGet(`/public/funding-rate?instId=${inst}`))[0]; return {rate: +d.fundingRate, next: +d.fundingTime}; },
+    async mmr(family) { const d = await okxGet(`/public/position-tiers?instType=SWAP&tdMode=isolated&instFamily=${family}&tier=1`); return d.length ? +d[0].mmr : 0.01; },
+    swapId: pair => pair + "-SWAP"
+  }
+};
+const X = EX.okx;
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+function px(p) { if (p == null || !isFinite(p) || p <= 0) return "-"; const d = Math.max(0, Math.min(8, 4 - Math.floor(Math.log10(p)))); return p.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d}); }
+const pct = (v, d = 1) => v == null || !isFinite(v) ? "-" : (v > 0 ? "+" : "") + v.toFixed(d) + "%";
+const AMS = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Amsterdam", hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+const AMSD = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Amsterdam", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+const tm = ms => AMS.format(new Date(ms)), tmd = ms => AMSD.format(new Date(ms));
+const ls = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
+const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+function toast(m) { const t = $("toast"); t.textContent = m; t.style.display = "block"; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = "none", 6000); }
+const b64uEnc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const b64uDec = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+const PAIR_RE = /^[A-Z0-9]{2,12}-USDT$/;
+const DAY_TFS = ["1m", "2m", "5m", "10m", "15m", "20m", "30m"];
+const DEF_WATCH = ["BTC-USDT", "ETH-USDT", "SOL-USDT", "XRP-USDT", "DOGE-USDT", "LINK-USDT"];
+const SPOT_FEE = 0.001, PERP_FEE = 0.0005, MAX_LEV = 3;
+const biasPill = b => b === "long" ? `<span class="pill p-long">LONG</span>` : b === "short" ? `<span class="pill p-short">SHORT · AVOID</span>` : `<span class="pill p-neutral">NEUTRAL</span>`;
+
+// ---------- password lock (PBKDF2-SHA256 600k; only a salted hash is stored, never the password) ----------
+const ITER = 600000, SESSION_H = 8;
+let KEYS = null, vaultKey = null;
+async function derive(pw, salt, iter) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({name: "PBKDF2", hash: "SHA-256", salt, iterations: iter}, base, 512));
+  return {verifier: bits.slice(0, 32), keyRaw: bits.slice(32)};
+}
+async function aesKey(raw) { return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]); }
+function sameBytes(a, b) { if (a.length !== b.length) return false; let x = 0; for (let i = 0; i < a.length; i++) x |= a[i] ^ b[i]; return x === 0; }
+function keepSession(raw) { sessionStorage.setItem("okx_s", JSON.stringify({k: b64uEnc(raw), until: Date.now() + SESSION_H * 3600e3})); }
+async function setPassword(pw, keepHoldings) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), d = await derive(pw, salt, ITER);
+  lsSet("okx_auth", {v: 1, salt: b64uEnc(salt), iter: ITER, ver: b64uEnc(d.verifier)});
+  vaultKey = await aesKey(d.keyRaw); keepSession(d.keyRaw);
+  await saveHoldings(keepHoldings || []);
+}
+async function checkPassword(pw) {
+  const a = ls("okx_auth"), d = await derive(pw, b64uDec(a.salt), a.iter);
+  if (!sameBytes(d.verifier, b64uDec(a.ver))) return false;
+  vaultKey = await aesKey(d.keyRaw); keepSession(d.keyRaw);
+  return true;
+}
+async function resumeSession() {
+  try { const s = JSON.parse(sessionStorage.getItem("okx_s") || "null"); if (!s || s.until < Date.now() || !ls("okx_auth")) return false; vaultKey = await aesKey(b64uDec(s.k)); return true; } catch (e) { return false; }
+}
+function lockNow() { sessionStorage.removeItem("okx_s"); vaultKey = null; location.reload(); }
+function attemptState() { return ls("okx_fail", {n: 0, until: 0}); }
+function noteFail() { const f = attemptState(); f.n++; if (f.n >= 5) f.until = Date.now() + Math.min(900, 30 * 2 ** (f.n - 5)) * 1000; lsSet("okx_fail", f); }
+async function loadHoldings() {
+  const v = ls("okx_vault"); if (!v || !vaultKey) return [];
+  try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name: "AES-GCM", iv: b64uDec(v.iv)}, vaultKey, b64uDec(v.ct)))); } catch (e) { return []; }
+}
+async function saveHoldings(h) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name: "AES-GCM", iv}, vaultKey, new TextEncoder().encode(JSON.stringify(h)));
+  lsSet("okx_vault", {iv: b64uEnc(iv), ct: b64uEnc(ct)});
+}
+// reset link: #reset=<payload>.<sig>, ECDSA P-256 signed on the box, 30 min, one use per device
+async function verifyReset(frag, pubB64u, now, used) {
+  const [p, s] = frag.split("."); if (!p || !s || !pubB64u) return {err: "This reset link is not valid."};
+  const key = await crypto.subtle.importKey("raw", b64uDec(pubB64u), {name: "ECDSA", namedCurve: "P-256"}, false, ["verify"]);
+  const ok = await crypto.subtle.verify({name: "ECDSA", hash: "SHA-256"}, key, b64uDec(s), b64uDec(p));
+  if (!ok) return {err: "This reset link is not valid."};
+  const d = JSON.parse(new TextDecoder().decode(b64uDec(p)));
+  if (d.a !== "okx-desk:reset") return {err: "This reset link is not valid."};
+  if (d.exp * 1000 < now) return {err: "This reset link has expired (they last 30 minutes). Ask Grok Bot for a new one."};
+  if (used.includes(d.n)) return {err: "This reset link was already used."};
+  return {nonce: d.n};
+}
+function lockScreen(mode, msg) {
+  const L = $("lock"); L.style.display = "block";
+  const f = attemptState(), wait = Math.max(0, Math.ceil((f.until - Date.now()) / 1000));
+  const title = mode === "set" ? "Set your password" : mode === "reset" ? "Choose a new password" : "OKX Desk is locked";
+  const intro = mode === "set" ? "First time on this device. Pick a password only you know (at least 10 characters). It's kept only as a salted hash on this device, never sent anywhere."
+    : mode === "reset" ? "Reset link accepted. Pick a new password. Holdings saved under the old password can't be opened and will be cleared (import your backup afterwards if you made one)."
+    : "Enter your password.";
+  L.innerHTML = `<div class="card"><h2>${title}</h2><p class="sm mut">${intro}</p>
+    <input class="f" id="pw1" type="password" autocomplete="${mode === "login" ? "current-password" : "new-password"}" placeholder="Password">
+    ${mode !== "login" ? `<input class="f" id="pw2" type="password" autocomplete="new-password" placeholder="Repeat password">` : ""}
+    <div class="row" style="margin-top:.5rem"><button class="btn" id="pwGo">${mode === "login" ? "Unlock" : "Save password"}</button><span class="sm red" id="pwErr">${esc(msg || (wait ? `Too many wrong tries. Wait ${wait}s.` : ""))}</span></div>
+    ${mode === "login" ? `<p class="xs mut" style="margin-top:1rem">Forgot it? Ask Grok Bot in chat for an "OKX desk reset link". It's emailed to you, works once and expires after 30 minutes.</p>` : ""}
+    <p class="xs mut" style="margin-top:1rem">This app never asks for exchange logins, 2FA codes, seed phrases or API keys. Anyone who does is scamming you.</p></div>`;
+  const go = async () => {
+    const pw = $("pw1").value, err = m => $("pwErr").textContent = m;
+    if (mode === "login") {
+      const st = attemptState(); if (st.until > Date.now()) return err(`Too many wrong tries. Wait ${Math.ceil((st.until - Date.now()) / 1000)}s.`);
+      err("Checking…");
+      if (await checkPassword(pw)) { lsSet("okx_fail", {n: 0, until: 0}); L.style.display = "none"; start(); }
+      else { noteFail(); const s2 = attemptState(); err(s2.until > Date.now() ? `Wrong password. Locked for ${Math.ceil((s2.until - Date.now()) / 1000)}s.` : "Wrong password."); $("pw1").value = ""; }
+      return;
+    }
+    if (pw.length < 10) return err("Use at least 10 characters.");
+    if (pw !== $("pw2").value) return err("The two passwords don't match.");
+    err("Saving…");
+    if (mode === "reset") { const u = ls("okx_used_resets", []); u.push(lockScreen.nonce); lsSet("okx_used_resets", u.slice(-50)); localStorage.removeItem("okx_vault"); }
+    await setPassword(pw, []); lsSet("okx_fail", {n: 0, until: 0}); L.style.display = "none"; start();
+  };
+  $("pwGo").onclick = go;
+  L.querySelectorAll("input").forEach(i => i.onkeydown = e => { if (e.key === "Enter") go(); });
+  $("pw1").focus();
+}
+
+// ---------- state ----------
+let watch = ls("okx_watch", DEF_WATCH).filter(p => PAIR_RE.test(p)); if (!watch.length) watch = DEF_WATCH.slice();
+let pushTfs = ls("okx_push_tfs", ["5m", "10m", "15m", "20m", "30m"]);
+let pushSwing = ls("okx_push_swing", true), pushPerp = ls("okx_push_perp", true);
+let inAppTfs = ls("okx_inapp_tfs", ["5m", "10m", "15m", "20m", "30m"]), sound = ls("okx_sound", true);
+let sel = ls("okx_sel", watch[0]); if (!watch.includes(sel)) sel = watch[0];
+let lev = ls("okx_lev", 2); if (![1, 2, 3].includes(lev)) lev = 2;
+let view = ls("okx_view", "day");
+const S = {tick: {}, bias: {}, h1: {}, sigs: [], sel: {}, swing: {}, perp: {}, port: {}, feed: null, err: {}, at: 0, swAt: 0};
+let holdings = [];
+let seen = new Set(ls("okx_seen", [])), firstPass = true;
+
+// ---------- data loads (each view loads only what it shows) ----------
+async function loadDay() {
+  const ticks = await Promise.all(watch.map(p => X.ticker(p).catch(e => ({err: e.message}))));
+  watch.forEach((p, i) => S.tick[p] = ticks[i]);
+  for (const p of watch) { const c = await X.candles(p, "1H"); S.h1[p] = c; S.bias[p] = biasDetail(c, "1H"); }
+  const sigs = [];
+  // entries can only happen under a LONG 1H direction, so only those pairs (plus the selected one) are scanned
+  for (const p of watch.filter(p => S.bias[p].bias === "long" || p === sel)) {
+    const gate = gateFn(S.h1[p], "1H"), rows = [];
+    for (const tf of DAY_TFS) {
+      const c = await X.candles(p, tf), s = latestSignal(c, tf, gate, DAY);
+      if (s) sigs.push(Object.assign({pair: p, tf, kind: "day"}, s));
+      if (p === sel) rows.push({tf, n: c.length, sig: s, sum: summary(backtest(c, tf, gate, DAY, SPOT_FEE))});
+    }
+    if (p === sel) S.sel = {pair: p, rows};
+  }
+  S.sigs = sigs;
+}
+async function loadSwing() {
+  for (const p of watch) {
+    const d1 = await X.candles(p, "1D"), c4 = await X.candles(p, "4H"), gate = gateFn(d1, "1D");
+    S.swing[p] = {bias: biasDetail(d1, "1D"), sig: latestSignal(c4, "4H", gate, SWING), sum: summary(backtest(c4, "4H", gate, SWING, SPOT_FEE))};
+  }
+  S.swAt = Date.now();
+}
+async function loadPerp() {
+  const p = sel, id = X.swapId(p);
+  const [fund, fnow, mmr] = await Promise.all([X.funding(id), X.fundingNow(id), X.mmr(p)]);
+  const out = {pair: p, fund, fnow, mmr, rows: []};
+  for (const [tf, gtf, prm] of [["30m", "1H", DAY], ["4H", "1D", SWING]]) {
+    const g = await X.candles(id, gtf), c = await X.candles(id, tf), gate = gateFn(g, gtf);
+    out.rows.push({tf, gtf, bias: biasDetail(g, gtf), sig: latestSignal(c, tf, gate, prm), sum: summary(backtest(c, tf, gate, prm, PERP_FEE, fund)), last: c.length ? c[c.length - 1][4] : null});
+  }
+  S.perp = out;
+  return out.rows.filter(r => r.sig).map(r => Object.assign({pair: id, tf: r.tf, kind: "perp"}, r.sig));
+}
+async function loadPort() {
+  const coins = [...new Set([...watch, ...holdings.map(h => h.coin + "-USDT")])];
+  for (const p of coins) {
+    try {
+      const t = await X.ticker(p), d1 = await X.candles(p, "1D"), w1 = await X.candles(p, "1W");
+      const i1 = indicators(d1), iw = indicators(w1), n = d1.length - 1, m = w1.length - 1;
+      S.port[p] = {last: t.last,
+        d1: d1.length > 55 ? (d1[n][4] > i1.e50[n] && i1.e20[n] > i1.e50[n] ? "up" : d1[n][4] < i1.e50[n] && i1.e20[n] < i1.e50[n] ? "down" : "mixed") : "new",
+        w1: w1.length > 25 ? (w1[m][4] > iw.e20[m] ? "up" : "down") : "new", e50: d1.length > 55 ? i1.e50[n] : null};
+    } catch (e) { S.port[p] = {err: e.message}; }
+  }
+}
+async function loadFeed() {
+  try { const r = await fetch(`data/okx.json?ts=${Date.now()}`, {cache: "no-store"}); S.feed = r.ok ? await r.json() : null; } catch (e) { S.feed = null; }
+}
+
+// ---------- in-app alerts (while open) ----------
+let actx = null;
+function beep() { if (!sound) return; try { actx = actx || new AudioContext(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; g.gain.value = .08; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + .25); } catch (e) {} }
+function announce(sigs) {
+  const fresh = sigs.filter(s => !seen.has(`${s.kind}|${s.pair}|${s.tf}|${s.candle}`));
+  fresh.forEach(s => seen.add(`${s.kind}|${s.pair}|${s.tf}|${s.candle}`));
+  lsSet("okx_seen", [...seen].slice(-300));
+  if (firstPass) return;
+  const loud = fresh.filter(s => s.kind !== "day" || inAppTfs.includes(s.tf));
+  if (!loud.length) return;
+  const s = loud[0], title = `${s.pair} ${s.tf} ${s.kind === "perp" ? "LONG contract" : s.kind === "swing" ? "SWING long" : "LONG"} entry`;
+  const body = `Entry ${px(s.entry)} · TP ${px(s.tp)} · SL ${px(s.sl)} · R:R ${s.rr.toFixed(1)} · ${tm(s.t)} AMS`;
+  toast(title + " - " + body); beep();
+  if (swReg && "Notification" in window && Notification.permission === "granted") swReg.showNotification(title, {body, tag: `${s.kind}-${s.pair}-${s.tf}`, icon: "icon-192.png"});
+}
+
+// ---------- renderers ----------
+const WARN = `<div class="banner bn-amb">Read before you trade<ul>
+  <li>1-2 minute scalping is mostly noise, and fees (about 0.2% per round trip) eat small gains. The paper results show it.</li>
+  <li>Always use a stop-loss. You tap every trade yourself; this app never places orders.</li>
+  <li>Start on the OKX demo account (Demo trading) before real money.</li>
+  <li>Never share codes, passwords or seed phrases, and never let anyone (friends included) set up accounts for you.</li></ul></div>`;
+function errBanner(k) { return S.err[k] ? `<div class="banner bn-red">Couldn't load OKX data: ${esc(S.err[k])}. No prices are shown instead of old or made-up ones; it retries every minute.</div>` : ""; }
+function biasWhy(d) {
+  if (!d || d.close == null) return "not enough data";
+  return `${d.close > d.e50 ? "above" : "below"} EMA50 · EMA20 ${d.e20 > d.e50 ? ">" : "<"} EMA50 · EMA50 ${d.e50 > d.e50_prev ? "rising" : "falling"} · RSI ${d.rsi.toFixed(0)}`;
+}
+function sigCard(s, extra = "") {
+  const noise = s.kind === "day" && (s.tf === "1m" || s.tf === "2m");
+  return `<div class="sig"><div class="row"><b>${esc(s.pair)}</b><span class="pill p-long">${s.kind === "perp" ? "LONG CONTRACT" : "LONG"}</span><span class="sm">${s.tf}</span>
+    ${noise ? `<span class="pill p-amb">NOISE RISK</span>` : ""}<span class="sp"></span><span class="sm mut">${tmd(s.t)} AMS${s.age ? ` · ${s.age} candle${s.age > 1 ? "s" : ""} ago` : ""}</span></div>
+    <div class="lv"><div>Entry<b>${px(s.entry)}</b></div><div>Take profit<b class="grn">${px(s.tp)}</b></div><div>Stop-loss<b class="red">${px(s.sl)}</b></div><div>Risk:reward<b>1 : ${s.rr.toFixed(1)}</b></div></div>${extra}</div>`;
+}
+function sumCells(s) {
+  if (!s || !s.n) return `<td class="n">0</td><td class="n">-</td><td class="n">-</td><td class="n">-</td>`;
+  return `<td class="n">${s.n}</td><td class="n">${s.win.toFixed(0)}%</td><td class="n">${s.avg_r.toFixed(2)}</td><td class="n ${s.net >= 0 ? "grn" : "red"}">${pct(s.net)}</td>`;
+}
+function renderDay() {
+  const el = $("v-day");
+  if (S.err.day && !Object.keys(S.bias).length) { el.innerHTML = errBanner("day") + WARN; return; }
+  if (!Object.keys(S.bias).length) { el.innerHTML = `<div class="card"><p class="sm mut" style="margin:0">Loading live OKX data…</p></div>` + WARN; return; }
+  const tiles = watch.map(p => {
+    const t = S.tick[p] || {}, b = S.bias[p];
+    return `<button class="tile ${p === sel ? "sel" : ""}" data-pair="${esc(p)}"><b>${esc(p.replace("-USDT", ""))}</b>
+      <div class="px">${t.err ? `<span class="red sm">no price</span>` : px(t.last)}</div>
+      <div class="xs ${t.last > t.open24h ? "grn" : "red"}">${t.last ? pct((t.last / t.open24h - 1) * 100) + " 24h" : ""}</div>
+      <div style="margin-top:.35rem">${b ? biasPill(b.bias) : ""}</div><div class="xs mut" style="margin-top:.3rem">${esc(biasWhy(b))}</div></button>`;
+  }).join("");
+  const nl = watch.filter(p => S.bias[p]?.bias === "long").length, ns = watch.filter(p => S.bias[p]?.bias === "short").length;
+  const sigs = S.sigs.slice().sort((a, b) => b.t - a.t), sr = S.sel.rows || [];
+  el.innerHTML = errBanner("day") + `
+  <div class="card"><div class="row"><h2 style="margin:0">Today's direction · 1H chart</h2><span class="sp"></span><span class="xs mut">last closed 1H candle</span></div>
+    <p class="sm mut" style="margin:.3rem 0 .7rem">LONG = day longs allowed · NEUTRAL = no trades · SHORT = avoid longs, consider spot-selling what you hold (spot can't short). Tap a coin for its details.</p>
+    <div class="tiles">${tiles}</div></div>
+  ${WARN}
+  <div class="split"><div>
+  <div class="card"><h2>Entry signals now</h2>
+    ${sigs.length ? sigs.map(s => sigCard(s)).join("") : `<p class="sm mut">No fresh entry on any timeframe. ${nl} coin${nl === 1 ? "" : "s"} with a long direction, ${ns} to avoid, ${watch.length - nl - ns} neutral. Signals only appear in the 1H direction.</p>`}
+    <p class="xs mut">Spot, no leverage. Entry = close of the signal candle. Stop = 1.5 × ATR below, target = 3 × ATR above. Amsterdam time.</p></div>
+  ${boxAlertsCard()}
+  </div><div>
+  <div class="card"><h2>${esc(sel)} by timeframe · paper results</h2>
+    <div class="scroll"><table class="tbl"><tr><th>TF</th><th>Now</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>
+    ${sr.map(r => `<tr><td><b>${r.tf}</b></td><td class="sm">${r.sig ? `<span class="grn">LONG ${px(r.sig.entry)}</span>` : S.bias[sel]?.bias !== "long" ? `<span class="mut">1H not long</span>` : `<span class="mut">no setup</span>`}</td>${sumCells(r.sum)}</tr>`).join("")}</table></div>
+    <p class="xs mut">Paper trades on the last 300 candles per timeframe (10m/20m are built from 300 5m candles, so they cover fewer). Net = after 0.1% fee per side, summed per trade.</p></div>
+  ${weeklyCard()}</div></div>
+  ${rulesCard()}`;
+  el.querySelectorAll("[data-pair]").forEach(b => b.onclick = () => { sel = b.dataset.pair; lsSet("okx_sel", sel); renderDay(); refresh(true); });
+}
+function weeklyCard() {
+  const w = S.feed && S.feed.weekly; if (!w) return "";
+  const rows = Object.entries(w.tfs).map(([tf, r]) => `<tr><td><b>${tf}</b>${w.muted.includes(tf) ? ` <span class="pill p-short">MUTED</span>` : r.flag ? ` <span class="pill p-amb">LOSES</span>` : ""}</td>${sumCells(r.backtest)}</tr>`).join("");
+  return `<div class="card"><h2>Weekly paper results · box, all coins</h2><div class="scroll"><table class="tbl"><tr><th>TF</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>${rows}</table></div>
+    <p class="xs mut">Run ${tmd(w.ts * 1000)} AMS on the last 1440 candles per timeframe for ${w.pairs.length} coins, after fees. A day timeframe that loses after fees (10+ trades) is flagged; MUTED = no phone push for it until a later week is positive. It still shows here.</p></div>`;
+}
+function boxAlertsCard() {
+  const a = S.feed && S.feed.alerts; if (!a || !a.length) return "";
+  return `<div class="card"><h2>Recent alerts from the box · paper-tracked</h2><div class="scroll"><table class="tbl"><tr><th>When</th><th>Coin</th><th>TF</th><th class="n">Entry</th><th>Result</th></tr>
+    ${a.slice(0, 15).map(x => `<tr><td class="sm">${tmd(x.ts * 1000)}</td><td>${esc(x.pair)}${x.market === "perp" ? ` <span class="xs mut">${x.lev}x</span>` : ""}</td><td>${esc(x.tf)}${x.pushed ? "" : ` <span class="xs mut">screen</span>`}</td><td class="n">${px(x.entry)}</td>
+      <td class="sm">${x.status === "open" ? "open" : `<span class="${x.net >= 0 ? "grn" : "red"}">${esc(x.status)} ${pct(x.net, 2)}</span>`}</td></tr>`).join("")}</table></div>
+    <p class="xs mut">Feed from ${tmd(S.feed.ts * 1000)} AMS (published at most every 10 min). Phone pushes arrive straight away.</p></div>`;
+}
+function rulesCard() {
+  return `<div class="card"><h2>How the signals work</h2>
+  <div class="rule"><b>1. Direction from the 1H chart (day) or the 1D chart (swing)</b><span>LONG when price is above the 50 EMA, the 20 EMA is above the 50 EMA, the 50 EMA is higher than 5 candles ago and RSI(14) is 50 or more. SHORT is the mirror image. Anything else is NEUTRAL: no trades.</span></div>
+  <div class="rule"><b>2. Entries only in that direction, long only</b><span>On 1m, 2m, 5m, 10m, 15m, 20m and 30m (4H for swing): the 20 EMA is above the 50 EMA, price dipped to the 20 EMA in the last 3 candles, RSI crosses back up through 50, and the candle closes green above the 20 EMA.</span></div>
+  <div class="rule"><b>3. Levels</b><span>Entry = candle close. Stop-loss = 1.5 × ATR(14) below (2 × for swing). Take profit = 3 × ATR above (4 × for swing). That's 1 : 2 risk:reward before fees.</span></div>
+  <div class="rule"><b>4. Paper results</b><span>Each signal is bought at its close and sold at the stop, the target, or after 48 candles (60 for swing). If stop and target are both hit in one candle it counts as a stop. Spot: 0.1% fee per side. Contracts: 0.05% per side plus funding.</span></div>
+  <div class="rule"><b>5. Data</b><span>Only OKX public market data: no keys, no account. Only closed candles are used, so a signal never changes after it appears.</span></div></div>`;
+}
+function renderSwing() {
+  const el = $("v-swing");
+  if (!Object.keys(S.swing).length) { el.innerHTML = errBanner("swing") || `<div class="card"><p class="sm mut" style="margin:0">Loading 1D and 4H candles…</p></div>`; return; }
+  const rows = watch.map(p => { const s = S.swing[p]; if (!s) return ""; return `<tr><td><b>${esc(p)}</b></td><td>${biasPill(s.bias.bias)}</td>${sumCells(s.sum)}</tr>`; }).join("");
+  const sigs = watch.filter(p => S.swing[p] && S.swing[p].sig).map(p => sigCard(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
+  el.innerHTML = errBanner("swing") + `<div class="split"><div><div class="card"><h2>Swing setups · 1D direction, 4H entries</h2>
+    ${sigs.length ? sigs.join("") : `<p class="sm mut">No open swing setup right now. A swing entry needs a LONG 1D direction plus the pullback and RSI turn on the 4H chart.</p>`}
+    <p class="xs mut">Spot, held for days. Stop = 2 × ATR(4H) below entry, target = 4 × ATR above. Check the stop is still in place every day.</p></div></div>
+    <div><div class="card"><h2>1D direction and 4H paper results</h2><div class="scroll"><table class="tbl"><tr><th>Coin</th><th>1D</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th></tr>${rows}</table></div>
+    <p class="xs mut">Last 300 4H candles (about 50 days) per coin, after 0.1% fee per side.</p></div></div></div>`;
+}
+function renderPerp() {
+  const el = $("v-perp"), P = S.perp;
+  const chips = watch.map(p => `<button class="chip ${p === sel ? "on" : ""}" data-pp="${esc(p)}">${esc(p.replace("-USDT", ""))}</button>`).join("");
+  const levs = [1, 2, 3].map(l => `<button class="chip ${l === lev ? "on" : ""}" data-lev="${l}">${l}x</button>`).join("");
+  let body = "";
+  if (P && P.pair === sel) {
+    body = `<div class="row sm" style="margin:.6rem 0 .2rem"><span>Funding now <b>${(P.fnow.rate * 100).toFixed(4)}%</b> per 8h (${P.fnow.rate >= 0 ? "longs pay" : "longs get paid"}), next ${tm(P.fnow.next)} AMS</span><span class="mut">Maintenance margin ${(P.mmr * 100).toFixed(2)}%</span></div>` +
+    P.rows.map(r => {
+      const liq = r.sig ? liquidation(r.sig.entry, lev, P.mmr) : r.last ? liquidation(r.last, lev, P.mmr) : null;
+      const extra = r.sig ? `<p class="xs mut" style="margin:.45rem 0 0">At ${lev}x: liquidation about ${px(liq.price)} (${liq.dist_pct.toFixed(1)}% below entry). The stop is ${((1 - r.sig.sl / r.sig.entry) * 100).toFixed(2)}% below entry, so it should hit long before liquidation. Size it so the stop costs at most 1% of your account.</p>` : "";
+      return `<h3>${r.tf === "30m" ? "Day · 30m entries, 1H direction" : "Swing · 4H entries, 1D direction"} ${biasPill(r.bias.bias)}</h3>
+        ${r.sig ? sigCard(Object.assign({pair: X.swapId(sel), tf: r.tf, kind: "perp"}, r.sig), extra) : `<p class="sm mut">No long setup now${r.bias.bias !== "long" ? ` (${r.gtf} direction isn't long)` : ""}. At ${lev}x, liquidation would be about ${liq ? liq.dist_pct.toFixed(1) : "-"}% below the current price.</p>`}
+        <div class="scroll"><table class="tbl"><tr><th>Paper</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">Net</th><th class="n">On ${lev}x margin</th></tr>
+        <tr><td class="sm">${r.tf}</td>${sumCells(r.sum)}<td class="n ${r.sum.net >= 0 ? "grn" : "red"}">${r.sum.n ? pct(r.sum.net * lev) : "-"}</td></tr></table></div>
+        <p class="xs mut">${r.sum.n ? `Fees ${pct(-r.sum.fees, 2)} and funding ${pct(-r.sum.fund, 3)} included. ` : ""}Last 300 ${r.tf} candles of ${esc(X.swapId(sel))}. Net is per position size; on margin it's multiplied by the leverage.</p>`;
+    }).join("");
+  }
+  el.innerHTML = errBanner("perp") + `<div class="banner bn-red">Leverage warning<ul>
+    <li>Contracts multiply losses too: at 3x you lose 3% of your margin for every 1% the coin drops, plus fees and funding.</li>
+    <li>Use 2x, never more than 3x, a small size, isolated margin and a stop-loss on every trade.</li>
+    <li>Long only here. Spot stays the default; try this on the OKX demo account first.</li></ul></div>
+    <div class="card"><h2>Long contracts · USDT perpetual swaps</h2><div class="chips">${chips}</div><div class="row" style="margin-top:.6rem"><span class="sm mut">Leverage</span><div class="chips">${levs}</div></div>${body || (S.err.perp ? "" : `<p class="sm mut">Loading ${esc(sel)} contract data…</p>`)}</div>`;
+  el.querySelectorAll("[data-pp]").forEach(b => b.onclick = () => { sel = b.dataset.pp; lsSet("okx_sel", sel); S.perp = {}; renderPerp(); refresh(true); });
+  el.querySelectorAll("[data-lev]").forEach(b => b.onclick = () => { lev = +b.dataset.lev; lsSet("okx_lev", lev); renderPerp(); });
+}
+const money = v => "$" + v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+function renderPort() {
+  const el = $("v-port");
+  let tot = 0, cost = 0, ok = true;
+  const rows = holdings.map((h, i) => { const q = S.port[h.coin + "-USDT"], v = q && q.last ? q.last * h.amount : null;
+    if (v == null) ok = false; else { tot += v; cost += h.price * h.amount; }
+    return `<tr><td><b>${esc(h.coin)}</b><div class="xs mut">${h.amount} @ ${px(h.price)}</div></td><td class="n">${q && q.last ? px(q.last) : q && q.err ? `<span class="red">no price</span>` : "…"}</td>
+      <td class="n">${v != null ? money(v) : "-"}</td><td class="n ${v != null && q.last >= h.price ? "grn" : "red"}">${v != null ? pct((q.last / h.price - 1) * 100) : "-"}</td>
+      <td class="n"><button class="chip" data-del="${i}" title="Remove">✕</button></td></tr>`; }).join("");
+  const coins = [...new Set([...watch, ...holdings.map(h => h.coin + "-USDT")])];
+  const tr = t => t === "up" ? `<span class="pill p-long">UP</span>` : t === "down" ? `<span class="pill p-short">DOWN</span>` : `<span class="pill p-neutral">${esc((t || "-").toUpperCase())}</span>`;
+  const lt = coins.map(p => { const q = S.port[p]; if (!q) return ""; if (q.err) return `<tr><td>${esc(p)}</td><td colspan="4" class="red sm">${esc(q.err)}</td></tr>`;
+    return `<tr><td><b>${esc(p.replace("-USDT", ""))}</b></td><td class="n">${px(q.last)}</td><td>${tr(q.d1)}</td><td>${tr(q.w1)}</td><td class="n">${q.e50 ? pct((q.last / q.e50 - 1) * 100) : "-"}</td></tr>`; }).join("");
+  el.innerHTML = errBanner("port") + `<div class="split"><div><div class="card"><h2>My holdings · read-only tracking</h2>
+    ${holdings.length ? `<div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Price</th><th class="n">Value</th><th class="n">P/L</th><th></th></tr>${rows}</table></div>
+      ${ok ? `<p class="sm" style="margin:.5rem 0 0">Total <b>${money(tot)}</b> · cost ${money(cost)} · <span class="${tot >= cost ? "grn" : "red"}">${pct((tot / cost - 1) * 100)}</span></p>` : ""}`
+      : `<p class="sm mut">Add what you hold to see its value at live OKX prices.</p>`}
+    <div class="addrow"><input class="f" id="hCoin" placeholder="Coin (BTC)" autocapitalize="characters"><input class="f" id="hAmt" type="number" inputmode="decimal" placeholder="Amount"><input class="f" id="hPx" type="number" inputmode="decimal" placeholder="Buy price $"><button class="btn" id="hAdd">Add</button></div>
+    <span class="sm red" id="hErr"></span>
+    <p class="xs mut">Stored only on this device, encrypted with your password. No exchange connection.</p>
+    <div class="row"><button class="chip" id="hExp">Export backup</button><button class="chip" id="hImp">Import backup</button></div></div></div>
+    <div><div class="card"><h2>Long-term watch · 1D and 1W trend</h2>${lt ? `<div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Price</th><th>1D</th><th>1W</th><th class="n">vs 1D EMA50</th></tr>${lt}</table></div>` : `<p class="sm mut">Loading daily and weekly candles…</p>`}
+    <p class="xs mut">1D UP = price above the 50-day EMA and 20 > 50 EMA. 1W UP = weekly close above the 20-week EMA. For longer-hold entries see Swing (spot) and Contracts (4H long, max ${MAX_LEV}x).</p></div></div></div>`;
+  el.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { holdings.splice(+b.dataset.del, 1); await saveHoldings(holdings); renderPort(); });
+  $("hAdd").onclick = async () => {
+    const coin = $("hCoin").value.trim().toUpperCase().replace(/-USDT$/, ""), amt = +$("hAmt").value, p = +$("hPx").value, err = m => $("hErr").textContent = m;
+    if (!/^[A-Z0-9]{2,12}$/.test(coin)) return err("Coin like BTC or SOL.");
+    if (!(amt > 0) || !(p > 0)) return err("Amount and buy price must be above 0.");
+    try { await X.ticker(coin + "-USDT"); } catch (e) { return err(`OKX has no ${coin}-USDT spot price.`); }
+    holdings.push({coin, amount: amt, price: p}); await saveHoldings(holdings); await loadPort(); renderPort();
+  };
+  $("hExp").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(holdings)], {type: "application/json"})); a.download = "okx-desk-holdings.json"; a.click(); };
+  $("hImp").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = "application/json"; i.onchange = async () => {
+    try { const d = JSON.parse(await i.files[0].text()); if (!Array.isArray(d)) throw 0;
+      holdings = d.filter(h => /^[A-Z0-9]{2,12}$/.test(h.coin) && h.amount > 0 && h.price > 0).map(h => ({coin: h.coin, amount: +h.amount, price: +h.price}));
+      await saveHoldings(holdings); await loadPort(); renderPort(); } catch (e) { $("hErr").textContent = "That file isn't a holdings backup."; } }; i.click(); };
+}
+function renderSet() {
+  const el = $("v-set"), f = S.feed;
+  el.innerHTML = `<div class="split"><div>
+    <div class="card"><h2>Watchlist</h2><div class="chips">${watch.map(p => `<span class="chip">${esc(p)} <a data-rm="${esc(p)}" style="cursor:pointer;margin-left:.3rem">✕</a></span>`).join("")}</div>
+      <div class="addrow"><input class="f" id="wAdd" placeholder="Add coin, e.g. AVAX" autocapitalize="characters"><button class="btn" id="wBtn">Add</button></div><span class="sm red" id="wErr"></span>
+      <p class="xs mut">5-8 liquid coins keeps it fast. The box scans the watchlist inside your alert code below.</p></div>
+    <div class="card"><h2>Phone alerts · work with the app closed</h2>${alertsHtml()}</div>
+    <div class="card"><h2>In-app alerts · while the app is open</h2><p class="sm mut" style="margin-top:0">Sound and a notification when a new signal appears on these day timeframes (swing and contracts always):</p>
+      <div class="chips">${DAY_TFS.map(t => `<button class="chip ${inAppTfs.includes(t) ? "on" : ""}" data-iat="${t}">${t}</button>`).join("")}</div>
+      <div class="row" style="margin-top:.6rem"><button class="chip ${sound ? "on" : ""}" id="snd">Sound ${sound ? "on" : "off"}</button></div></div>
+  </div><div>
+    <div class="card"><h2>Security</h2><p class="sm mut" style="margin-top:0">Your password is kept only as a salted PBKDF2-SHA256 hash (600,000 rounds) on this device. The app locks after ${SESSION_H} hours or when you tap Lock now.</p>
+      <div class="addrow"><input class="f" id="cp1" type="password" autocomplete="new-password" placeholder="New password"><input class="f" id="cp2" type="password" autocomplete="new-password" placeholder="Repeat"><button class="btn ghost" id="cpGo">Change password</button></div>
+      <span class="sm" id="cpMsg"></span><div class="row" style="margin-top:.4rem"><button class="btn warn" id="lockBtn">Lock now</button></div></div>
+    ${WARN}
+    <div class="card"><h2>About</h2><p class="sm mut" style="margin:0">Signals and paper results only. It can't trade, has no exchange login and never asks for API keys, 2FA codes or seed phrases. Data: OKX public market API, fetched by this device (${reqCount} requests this session). ${f ? `Box last scan ${f.heartbeat ? tmd(f.heartbeat.ts * 1000) + " AMS" : "-"} · ${f.devices} phone(s) registered.` : "Box feed not reachable."}</p></div>
+  </div></div>`;
+  el.querySelectorAll("[data-rm]").forEach(a => a.onclick = () => { if (watch.length <= 1) return; watch = watch.filter(p => p !== a.dataset.rm); lsSet("okx_watch", watch); if (!watch.includes(sel)) sel = watch[0]; refreshCode(); });
+  $("wBtn").onclick = async () => { const c = $("wAdd").value.trim().toUpperCase().replace(/-USDT$/, ""), p = c + "-USDT", err = m => $("wErr").textContent = m;
+    if (!PAIR_RE.test(p)) return err("Coin like AVAX."); if (watch.includes(p)) return err("Already on the list."); if (watch.length >= 12) return err("12 coins max.");
+    try { await X.ticker(p); } catch (e) { return err(`OKX has no ${p} spot market.`); }
+    watch.push(p); lsSet("okx_watch", watch); refreshCode(); };
+  el.querySelectorAll("[data-iat]").forEach(b => b.onclick = () => { const t = b.dataset.iat; inAppTfs = inAppTfs.includes(t) ? inAppTfs.filter(x => x !== t) : [...inAppTfs, t]; lsSet("okx_inapp_tfs", inAppTfs); renderSet(); });
+  el.querySelectorAll("[data-pt]").forEach(b => b.onclick = () => { const t = b.dataset.pt; pushTfs = pushTfs.includes(t) ? pushTfs.filter(x => x !== t) : DAY_TFS.filter(x => x === t || pushTfs.includes(x)); lsSet("okx_push_tfs", pushTfs); refreshCode(); });
+  el.querySelectorAll("[data-px]").forEach(b => b.onclick = () => { if (b.dataset.px === "s") { pushSwing = !pushSwing; lsSet("okx_push_swing", pushSwing); } else { pushPerp = !pushPerp; lsSet("okx_push_perp", pushPerp); } refreshCode(); });
+  $("snd").onclick = () => { sound = !sound; lsSet("okx_sound", sound); renderSet(); if (sound) beep(); };
+  $("lockBtn").onclick = lockNow;
+  $("cpGo").onclick = async () => { const a = $("cp1").value, b = $("cp2").value, m = $("cpMsg");
+    if (a.length < 10) return m.textContent = "Use at least 10 characters."; if (a !== b) return m.textContent = "They don't match.";
+    await setPassword(a, holdings); $("cp1").value = $("cp2").value = ""; m.textContent = "Password changed."; };
+  bindAlerts();
+}
+
+// ---------- push registration (code -> Grok Bot -> box; the box sends the pushes) ----------
+const pushOK = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+let swReg = null, pushCode = localStorage.getItem("okx_push_code");
+async function registerSW() { if (!("serviceWorker" in navigator)) return null; try { swReg = await navigator.serviceWorker.register("sw.js", {scope: "./"}); } catch (e) {} return swReg; }
+function alertsHtml() {
+  const tfChips = DAY_TFS.map(t => `<button class="chip ${pushTfs.includes(t) ? "on" : ""}" data-pt="${t}">${t}</button>`).join("");
+  const opts = `<p class="sm mut" style="margin:.2rem 0 .4rem">Push for these (1m/2m are off by default: mostly noise):</p><div class="chips">${tfChips}
+    <button class="chip ${pushSwing ? "on" : ""}" data-px="s">Swing 4H</button><button class="chip ${pushPerp ? "on" : ""}" data-px="c">Contracts</button></div>
+    ${S.feed && S.feed.muted_tfs && S.feed.muted_tfs.length ? `<p class="xs amb">Muted by the weekly check (they lose after fees): ${esc(S.feed.muted_tfs.join(", "))}.</p>` : ""}
+    <p class="xs mut">Quiet hours 23:00-07:00 Amsterdam: day alerts are skipped, swing and contract alerts wait for the morning. One alert per coin and setup until it resolves or 60 min pass.</p>`;
+  if (!pushOK()) return `<p class="sm mut">This browser can't receive push alerts. On Android use Chrome and add the app to the Home screen.</p>` + opts;
+  if (Notification.permission === "denied") return `<p class="sm red">Notifications are blocked for this site. Allow them in Chrome's site settings.</p>` + opts;
+  if (pushCode) return opts + `<p class="sm">Send this whole line to Grok Bot in chat, once per phone and again after you change these choices or the watchlist. It only lets the box send alerts to this phone; it has no password or account data in it.</p>
+    <textarea id="pushCode" readonly rows="4" style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.5rem;font:12px ui-monospace,monospace">${esc(pushCode)}</textarea>
+    <div class="row"><button class="btn" id="copyCode">Copy</button><span class="sm mut" id="copyMsg"></span><span class="sp"></span><button class="btn ghost" id="offPush">Turn off</button></div>`;
+  return opts + `<div class="row" style="margin-top:.5rem"><button class="btn" id="onPush">Enable phone alerts</button><span class="sm red" id="pushErr"></span></div>`;
+}
+async function refreshCode() { if (pushCode) { try { await makeCode(); return; } catch (e) { pushCode = null; localStorage.removeItem("okx_push_code"); } } renderSet(); }
+async function makeCode() {
+  const reg = swReg || await registerSW(); await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64uDec(KEYS.vapid)});
+  const j = sub.toJSON();
+  pushCode = "OKX1." + b64uEnc(new TextEncoder().encode(JSON.stringify({e: j.endpoint, p: j.keys.p256dh, a: j.keys.auth, f: pushTfs, w: watch, s: pushSwing, c: pushPerp})));
+  localStorage.setItem("okx_push_code", pushCode); renderSet();
+}
+function bindAlerts() {
+  const on = $("onPush"), copy = $("copyCode"), off = $("offPush");
+  if (on) on.onclick = async () => { const err = m => $("pushErr").textContent = m;
+    try { if (!KEYS || !KEYS.vapid) return err("Alert key missing."); if (await Notification.requestPermission() !== "granted") return renderSet(); await makeCode(); }
+    catch (e) { err("Couldn't turn on alerts: " + e.message); } };
+  if (copy) copy.onclick = async () => { try { await navigator.clipboard.writeText($("pushCode").value); $("copyMsg").textContent = "Copied"; } catch (e) { $("pushCode").select(); $("copyMsg").textContent = "Select and copy"; } };
+  if (off) off.onclick = async () => { const r = swReg || await registerSW(); const s = r && await r.pushManager.getSubscription(); if (s) await s.unsubscribe(); localStorage.removeItem("okx_push_code"); pushCode = null; renderSet(); };
+}
+
+// ---------- shell ----------
+const RENDER = {day: renderDay, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
+function show(v) { view = v; lsSet("okx_view", v); document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v)); document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); RENDER[v](); refresh(true); }
+let busy = false;
+async function refresh(force) {
+  if (busy || (!force && document.hidden)) return; busy = true;
+  const v = view;
+  try {
+    const all = [];
+    try { await loadDay(); S.err.day = null; all.push(...S.sigs); } catch (e) { S.err.day = e.message; }
+    if (v === "swing" || Date.now() - S.swAt > 600000) { try { await loadSwing(); S.err.swing = null; } catch (e) { S.err.swing = e.message; } }
+    watch.forEach(p => S.swing[p] && S.swing[p].sig && all.push(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
+    if (v === "perp") { try { all.push(...await loadPerp()); S.err.perp = null; } catch (e) { S.err.perp = e.message; } }
+    if (v === "port") { try { await loadPort(); S.err.port = null; } catch (e) { S.err.port = e.message; } }
+    if (!S.feed || Date.now() - S.at > 300000) await loadFeed();
+    announce(all); firstPass = false; S.at = Date.now();
+  } finally { busy = false; }
+  $("upd").textContent = S.err.day ? "OKX data error" : "Live OKX · " + tm(Date.now()) + " AMS";
+  if (view === v) RENDER[v]();
+}
+const THEMES = ["auto", "dark", "light"];
+function applyTheme() { const p = localStorage.getItem("okx_theme") || "auto", h = +new Intl.DateTimeFormat("en-GB", {hour: "2-digit", hourCycle: "h23", timeZone: "Europe/Amsterdam"}).format(new Date());
+  document.documentElement.dataset.theme = p === "auto" ? (h >= 22 || h < 7 ? "light" : "dark") : p; $("theme").textContent = p[0].toUpperCase() + p.slice(1); }
+$("theme").onclick = () => { const p = localStorage.getItem("okx_theme") || "auto"; localStorage.setItem("okx_theme", THEMES[(THEMES.indexOf(p) + 1) % 3]); applyTheme(); };
+applyTheme(); setInterval(applyTheme, 60000);
+let started = false;
+async function start() {
+  if (started) return; started = true;
+  holdings = await loadHoldings();
+  $("tabs").style.display = ""; $("app").style.display = "";
+  document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.v));
+  registerSW(); show(RENDER[view] ? view : "day");
+  setInterval(() => refresh(false), 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - S.at > 55000) refresh(false); });
+}
+(async function boot() {
+  try { KEYS = await (await fetch("keys.json", {cache: "no-store"})).json(); } catch (e) { KEYS = null; }
+  const h = location.hash;
+  if (h.startsWith("#reset=")) {
+    history.replaceState(null, "", location.pathname + location.search);
+    let r; try { r = await verifyReset(h.slice(7), KEYS && KEYS.reset, Date.now(), ls("okx_used_resets", [])); } catch (e) { r = {err: "This reset link is not valid."}; }
+    if (r.nonce) { lockScreen.nonce = r.nonce; return lockScreen("reset"); }
+    return lockScreen(ls("okx_auth") ? "login" : "set", r.err);
+  }
+  if (!ls("okx_auth")) return lockScreen("set");
+  if (await resumeSession()) return start();
+  lockScreen("login");
+})();
+</script>
+</body>
+</html>
