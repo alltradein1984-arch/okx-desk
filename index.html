@@ -96,9 +96,40 @@ header h1{margin-left:-.2rem}
   #toast{bottom:1.2rem}
 }
 
-/* Dashboard + coin page */
+/* Dashboard + coin page — Bloomberg / desk-floor terminal look */
+.term{--tbg:#05070a;--tpanel:#0b0f14;--tline:#1c2430;--tmut:#7d8a9a;--tacc:#3dffa8;--tamb:#ffb648;--tred:#ff5468;--tblu:#5aa9ff;--tpur:#b388ff}
+.term .tticker{display:flex;gap:.75rem;overflow-x:auto;white-space:nowrap;padding:.45rem .75rem;background:#000;border:1px solid var(--tline);border-radius:10px;font:11px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c9d2de;margin-bottom:.65rem;-webkit-overflow-scrolling:touch}
+.term .tticker b{color:#fff}.term .tticker .g{color:var(--tacc)}.term .tticker .r{color:var(--tred)}.term .tticker .sep{color:#334}
+.floor-wrap{background:linear-gradient(180deg,#0a1018 0%,#070b10 100%);border:1px solid var(--tline);border-radius:14px;padding:.55rem .4rem .35rem;margin-bottom:.65rem;overflow:hidden}
+.floor-wrap svg{width:100%;height:auto;display:block}
+.tgrid{display:grid;grid-template-columns:1fr;gap:.55rem}
+@media (min-width:720px){.tgrid{grid-template-columns:1fr 1fr}.tgrid .span2{grid-column:1/-1}}
+.tpanel{background:var(--tpanel);border:1px solid var(--tline);border-radius:12px;padding:.55rem .65rem;min-width:0}
+.tpanel h3{margin:0 0 .4rem;font:700 11px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#9eb0c3;display:flex;align-items:center;gap:.4rem}
+.tpanel h3 .num{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;border-radius:4px;background:#15202b;color:var(--tamb);font-size:10px}
+.tpanel .mono{font:11px/1.35 ui-monospace,Menlo,monospace;color:#c5d0dc}
+.tpanel table.tt{width:100%;border-collapse:collapse;font:11px/1.35 ui-monospace,Menlo,monospace}
+.tpanel table.tt th{text-align:left;color:var(--tmut);font-weight:600;padding:.2rem .25rem;border-bottom:1px solid var(--tline);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.tpanel table.tt td{padding:.28rem .25rem;border-bottom:1px solid #121820;vertical-align:top;color:#d5dde8}
+.tpanel table.tt td.n,.tpanel table.tt th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tpanel table.tt tr:last-child td{border:0}
+.check{list-style:none;margin:0;padding:0}.check li{display:flex;gap:.45rem;align-items:flex-start;padding:.22rem 0;border-bottom:1px solid #121820;font:11px/1.35 ui-monospace,Menlo,monospace;color:#c5d0dc}
+.check li:last-child{border:0}.check .box{flex:none;width:14px;height:14px;border:1px solid #3a4656;border-radius:3px;margin-top:1px;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+.check .box.on{background:#0f2a1d;border-color:#1d5a3b;color:var(--tacc)}.check .box.off{background:#2a0f15;border-color:#5c1d29;color:var(--tred)}
+.bankchart,.livechart{width:100%;height:140px;background:#070b10;border:1px solid #141b24;border-radius:8px;overflow:hidden}
+.livechart{height:180px}
+.tfmini{display:flex;flex-wrap:wrap;gap:.25rem;margin:.3rem 0}
+.tfmini button{font:10px ui-monospace,Menlo,monospace;padding:.2rem .45rem;border-radius:5px;border:1px solid var(--tline);background:#10161e;color:#9eb0c3;cursor:pointer}
+.tfmini button.on{background:#10263f;border-color:#1e4d80;color:#9cc9ff}
+.tlog{height:78px;overflow:hidden;background:#000;border:1px solid var(--tline);border-radius:10px;margin-top:.55rem;position:relative}
+.tlog-inner{padding:.35rem .55rem;font:10px/1.45 ui-monospace,Menlo,monospace;color:#8fa0b3;animation:tscroll 28s linear infinite}
+@keyframes tscroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.tlog .ev-g{color:var(--tacc)}.tlog .ev-r{color:var(--tred)}.tlog .ev-a{color:var(--tamb)}
+.navbands{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
+.navbands button{font:11px ui-monospace,Menlo,monospace;padding:.4rem .65rem;border-radius:8px;border:1px solid var(--tline);background:#10161e;color:#c5d0dc;cursor:pointer}
+.navbands button.on{outline:1px solid var(--tamb);background:#1a160c;color:var(--tamb)}
 .dcards{display:flex;flex-direction:column;gap:.7rem}
-.dcard{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:.85rem 1rem;color:inherit;font:inherit;cursor:pointer}
+.dcard{display:block;width:100%;text-align:left;background:var(--tpanel);border:1px solid var(--tline);border-radius:12px;padding:.85rem 1rem;color:inherit;font:inherit;cursor:pointer}
 .dcard:active{transform:scale(.995)}
 .dcard .top{display:flex;align-items:flex-start;gap:.6rem}
 .dcard .sym{font-weight:800;font-size:1.05rem;letter-spacing:.02em}
@@ -108,16 +139,28 @@ header h1{margin-left:-.2rem}
 .dcard .meta div{font-size:.7rem;color:var(--mut)}.dcard .meta b{display:block;font-size:.88rem;color:var(--txt);font-variant-numeric:tabular-nums}
 .band-hero{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media (min-width:700px){.band-hero{grid-template-columns:repeat(4,1fr)}}
-.band-tile{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:1rem;cursor:pointer;color:inherit;font:inherit;text-align:left}
-.band-tile h3{margin:0 0 .25rem;font-size:1rem}.band-tile .cut{font-size:.78rem;color:var(--mut)}.band-tile .n{font-size:1.4rem;font-weight:800;margin-top:.4rem}
+.band-tile{background:var(--tpanel);border:1px solid var(--tline);border-radius:12px;padding:.85rem;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.band-tile h3{margin:0 0 .25rem;font-size:.95rem;font-family:ui-monospace,Menlo,monospace}.band-tile .cut{font-size:.72rem;color:var(--tmut)}.band-tile .n{font-size:1.35rem;font-weight:800;margin-top:.35rem;font-variant-numeric:tabular-nums}
 .allgrid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
 @media (min-width:700px){.allgrid{grid-template-columns:repeat(3,1fr)}}
 @media (min-width:1100px){.allgrid{grid-template-columns:repeat(4,1fr)}}
-.alltile{display:block;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:.65rem .7rem;color:inherit;font:inherit;cursor:pointer}
-.alltile .sym{font-weight:800;font-size:.95rem}
+.alltile{display:block;width:100%;text-align:left;background:var(--tpanel);border:1px solid var(--tline);border-radius:12px;padding:.65rem .7rem;color:inherit;font:inherit;cursor:pointer}
+.alltile .sym{font-weight:800;font-size:.95rem;font-family:ui-monospace,Menlo,monospace}
 .alltile .px{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums;margin:.1rem 0}
 .alltile .spark{height:32px;margin-top:.25rem}
 .alltile .spark svg{width:100%;height:100%;display:block}
+.coin-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem}
+.coin-head .back{background:#10161e;border:1px solid var(--tline);border-radius:99px;padding:.35rem .75rem;font:11px ui-monospace,Menlo,monospace;color:var(--txt);cursor:pointer}
+#coinChart{width:100%;height:320px;border-radius:12px;overflow:hidden;background:#070b10;border:1px solid var(--tline)}
+@media (min-width:960px){#coinChart{height:420px}}
+.paper-panel{border:1px solid #5a4614;background:#1a160c}
+html[data-theme="light"] .paper-panel{background:#fff8e8;border-color:#f0cf8a}
+.paper-panel .badge{margin-left:.4rem}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem}.statgrid div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:.55rem .65rem;font-size:.72rem;color:var(--mut)}.statgrid b{display:block;font-size:1rem;color:var(--txt);font-variant-numeric:tabular-nums}
+@media (min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
+.tfbar{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
+.term .badge.b-paper{background:#2a2410;color:var(--tamb);border:1px solid #5a4614}
+
 .coin-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem}
 .coin-head .back{background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:.35rem .75rem;font:inherit;color:var(--txt);cursor:pointer}
 #coinChart{width:100%;height:320px;border-radius:12px;overflow:hidden;background:var(--card2);border:1px solid var(--line)}
@@ -1144,11 +1187,11 @@ function bindAlerts() {
 // ---------- Dashboard: price bands + per-coin pages + PAPER bot panel ----------
 // Hash routes: #/dash | #/dash/low|mid|high | #/coin/BTC  (own screen per coin, not a modal)
 const PRICE_BANDS = {
-  low:  { id: "low",  label: "Low-price",  cut: "< $1",        lo: 0,   hi: 1 },
-  mid:  { id: "mid",  label: "Mid-price",  cut: "$1 – $100",   lo: 1,   hi: 100 },
   high: { id: "high", label: "High-price", cut: "> $100",      lo: 100, hi: Infinity },
+  mid:  { id: "mid",  label: "Mid-price",  cut: "$1 – $100",   lo: 1,   hi: 100 },
+  low:  { id: "low",  label: "Low-price",  cut: "< $1",        lo: 0,   hi: 1 },
 };
-const BAND_ORDER = ["low", "mid", "high"];
+const BAND_ORDER = ["all", "high", "mid", "low"]; // All first, then High/Mid/Low
 function bandOf(price) {
   if (price == null || !isFinite(price) || price <= 0) return null;
   if (price < 1) return "low";
@@ -1156,9 +1199,11 @@ function bandOf(price) {
   return "high";
 }
 const COIN_TFS = ["1m", "5m", "15m", "30m", "1H", "4H", "1D"];
-let dashBand = null;          // null = hub, else low|mid|high
+let dashBand = null;          // null = hub (desk floor), else all|low|mid|high
 let coinPage = { coin: null, tf: "1H", chart: null, series: null, e20: null, e50: null };
-let paperBot = null;          // data/paper_bot.json
+let paperBot = null;
+let bankMode = "history";     // intraday | history
+let bankRange = "1M";         // 1D | 5D | 1M
 const volFmt = v => {
   if (v == null || !isFinite(v)) return "-";
   if (v >= 1e9) return (v / 1e9).toFixed(2) + "B";
@@ -1183,9 +1228,6 @@ function latestForCoin(coin) {
   if (day) return Object.assign({ kind: "day" }, day);
   const sw = S.swing[coin] && S.swing[coin].sig;
   if (sw) return Object.assign({ pair: coin, tf: "4H", kind: "swing" }, sw);
-  // box alerts for this coin
-  const a = ((S.feed && S.feed.alerts) || []).find(x => (x.pair === coin || x.pair === coin + "-USDT"));
-  if (a && a.status === "open") return { pair: coin, tf: a.tf, kind: a.market === "perp" ? "perp" : "day", entry: a.entry, sl: a.sl, tp: a.tp, t: (a.candle || a.ts) * (a.candle > 1e12 ? 1 : 1), age: null, rr: a.rr };
   return null;
 }
 function coinCardHTML(coin) {
@@ -1195,7 +1237,7 @@ function coinCardHTML(coin) {
   const up = chg == null ? true : chg >= 0;
   const sig = latestForCoin(coin);
   const sigLine = sig
-    ? `<div class="xs" style="margin-top:.4rem"><span class="pill p-long">${sig.kind === "swing" ? "SWING" : sig.kind === "perp" ? "CONTRACT" : "LONG"} ${esc(sig.tf)}</span>
+    ? `<div class="xs" style="margin-top:.4rem"><span class="pill p-long">${sig.kind === "swing" ? "SWING" : "LONG"} ${esc(sig.tf)}</span>
         Entry <b>${px(sig.entry)}</b> · TP <b class="grn">${px(sig.tp)}</b> · SL <b class="red">${px(sig.sl)}</b></div>`
     : `<div class="xs mut" style="margin-top:.4rem">No open signal</div>`;
   return `<button class="dcard" data-coin="${esc(coin)}" type="button">
@@ -1226,102 +1268,324 @@ async function loadPaperBot() {
     paperBot = r.ok ? await r.json() : null;
   } catch (e) { paperBot = null; }
 }
-function paperPanelHTML() {
-  const pb = paperBot;
-  if (!pb) return `<div class="card paper-panel"><h2>PAPER grid + DCA bot <span class="badge b-paper">PAPER</span></h2><p class="sm mut">Paper snapshot not loaded yet.</p></div>`;
-  const running = pb.status === "running" && pb.paper;
-  let body = "";
-  if (running) {
-    const P = pb.paper;
-    body = `<p class="sm">Live PAPER state · balance <b>${money(P.balance_usd || P.equity_usd || 0)}</b>
-      · PnL <b class="${(P.pnl_usd || 0) >= 0 ? "grn" : "red"}">${amt(P.pnl_usd || 0, "USD")}</b></p>
-      <div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Position</th><th class="n">Avg</th><th class="n">PnL</th></tr>
-      ${(P.positions || []).map(x => `<tr><td><b>${esc(x.coin)}</b></td><td class="n">${x.size}</td><td class="n">${px(x.avg)}</td><td class="n ${x.pnl >= 0 ? "grn" : "red"}">${amt(x.pnl, "USD")}</td></tr>`).join("") || `<tr><td colspan="4" class="mut sm">No open positions</td></tr>`}</table></div>`;
-  } else {
-    const bt = pb.backtest || {};
-    const tot = bt.totals_fee_0_35 || {};
-    const hold = bt.hold_fee_0_35 || {};
-    body = `<div class="banner bn-amb" style="margin:.4rem 0 .7rem">PAPER — not started yet. Forward paper run on live prices needs Mike's ok. Nothing below places orders.</div>
-      <h3 style="margin:.2rem 0 .5rem">30-day backtest (step 1)</h3>
-      <p class="xs mut" style="margin:0 0 .5rem">${esc(bt.generated_at_ams || "")} · $${bt.capital_usd} across ${esc((bt.coins || []).join("/"))} · ${bt.days}d · 1H bars · fee 0.35% (EU example)</p>
-      <div class="statgrid">
-        <div>Bot ending<b class="${(tot.ending_value || 0) >= bt.capital_usd ? "grn" : "red"}">$${(tot.ending_value || 0).toFixed(2)}</b></div>
-        <div>Hold ending<b>$${(hold.ending_value || 0).toFixed(2)}</b></div>
-        <div>Grid profit<b class="grn">$${(tot.grid_profit || 0).toFixed(2)}</b></div>
-        <div>Max drawdown<b class="red">${(tot.portfolio_mdd_pct || 0).toFixed(1)}%</b></div>
-        <div>Fees paid<b>$${(tot.fees_paid || 0).toFixed(2)}</b></div>
-        <div>Fills<b>${tot.fills || 0}</b></div>
-        <div>DCA spent<b>$${(tot.dca_spend || 0).toFixed(0)}</b></div>
-        <div>vs hold<b class="${(tot.ending_value || 0) >= (hold.ending_value || 0) ? "grn" : "red"}">${pct(((tot.ending_value || 0) / (hold.ending_value || 1) - 1) * 100)}</b></div>
-      </div>
-      <div class="scroll" style="margin-top:.6rem"><table class="tbl"><tr><th>Coin</th><th class="n">End $</th><th class="n">Grid $</th><th class="n">Fees</th><th class="n">MDD</th></tr>
-      ${(bt.per_coin_fee_0_35 || []).map(r => `<tr><td><b>${esc(r.coin)}</b></td><td class="n">${r.ending_value.toFixed(2)}</td><td class="n">${r.grid_profit.toFixed(2)}</td><td class="n">${r.fees_paid.toFixed(2)}</td><td class="n red">${r.max_drawdown_pct.toFixed(1)}%</td></tr>`).join("")}</table></div>`;
-  }
-  return `<div class="card paper-panel" id="paperPanel"><div class="row"><h2 style="margin:0">PAPER grid + DCA bot</h2><span class="badge b-paper">PAPER · NO ORDERS</span></div>
-    <p class="xs mut" style="margin:.3rem 0 .5rem">${esc(pb.note || "PAPER only.")} Reads <code>data/paper_bot.json</code> (and a future <code>paper_state.json</code> from the box).</p>
-    ${body}</div>`;
-}
 function bandCoins(bandId) {
   return listed().filter(c => {
     const t = S.tick[c];
     return t && !t.err && bandOf(t.last) === bandId;
   });
 }
+function deskNavHTML(active) {
+  const nAll = listed().length;
+  const counts = { all: nAll, high: bandCoins("high").length, mid: bandCoins("mid").length, low: bandCoins("low").length };
+  const labels = { all: "All", high: "High", mid: "Mid", low: "Low" };
+  const cuts = { all: "every coin", high: "> $100", mid: "$1–$100", low: "< $1" };
+  return `<div class="navbands">${BAND_ORDER.map(id =>
+    `<button type="button" data-band="${id}" class="${active === id ? "on" : ""}"><b>${labels[id]}</b> <span class="mut">${counts[id]}</span> · <span class="mut">${cuts[id]}</span></button>`
+  ).join("")}</div>`;
+}
+function tickerHTML() {
+  const coin = coinPage.coin || sel;
+  const t = S.tick[coin] || {}, b = S.bias[coin];
+  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  const pb = paperBot && paperBot.backtest;
+  const bank = pb && pb.totals_fee_0_35 ? pb.totals_fee_0_35.ending_value : null;
+  const alerts = (S.feed && S.feed.alerts) || [];
+  const won = alerts.filter(a => a.status && a.status !== "open" && a.net > 0).length;
+  const lost = alerts.filter(a => a.status && a.status !== "open" && a.net <= 0).length;
+  const openN = alerts.filter(a => a.status === "open").length;
+  return `<div class="tticker" aria-label="status ticker">
+    <span><b>${esc(X.label)}</b> DESK</span><span class="sep">|</span>
+    <span><b>${esc(coin)}</b>/${X.quote} <b>${t.err || t.last == null ? "—" : px(t.last)}</b>
+      <span class="${chg >= 0 ? "g" : "r"}">${chg == null ? "" : pct(chg)}</span></span><span class="sep">|</span>
+    <span>1H ${b ? `<span class="${b.bias === "long" ? "g" : b.bias === "short" ? "r" : ""}">${esc(b.bias.toUpperCase())}</span>` : "…"}</span><span class="sep">|</span>
+    <span>BANK <b>${bank != null ? "$" + bank.toFixed(2) : "—"}</b> <span class="ev-a">BACKTEST</span></span><span class="sep">|</span>
+    <span>TICKETS <span class="g">${won}W</span>/<span class="r">${lost}L</span> · ${openN} open</span><span class="sep">|</span>
+    <span>PAPER · NO ORDERS</span><span class="sep">|</span>
+    <span>${esc(tm(Date.now()))} AMS</span>
+  </div>`;
+}
+function deskFloorSVG() {
+  // Decorative desk floor — icons map to real desks; no fake prices drawn
+  const desks = [
+    { x: 28,  y: 78, c: "#ff5468", label: "SCAN" },
+    { x: 118, y: 78, c: "#3dffa8", label: "QUANT" },
+    { x: 208, y: 78, c: "#5aa9ff", label: "SIZE" },
+    { x: 28,  y: 138, c: "#b388ff", label: "VET" },
+    { x: 118, y: 138, c: "#e8edf2", label: "FILLS" },
+    { x: 208, y: 138, c: "#ffb648", label: "RISK" },
+  ];
+  const desk = (d, i) => `
+    <g transform="translate(${d.x},${d.y})">
+      <rect x="0" y="18" width="70" height="28" rx="4" fill="#121820" stroke="#2a3544"/>
+      <rect x="10" y="0" width="50" height="22" rx="3" fill="#0c1219" stroke="${d.c}" stroke-width="1.2"/>
+      <circle cx="35" cy="11" r="5" fill="${d.c}"/>
+      <text x="35" y="55" text-anchor="middle" fill="#9eb0c3" font-size="9" font-family="ui-monospace,Menlo,monospace">${d.label}</text>
+    </g>`;
+  // mini wall charts (decorative shapes only — not labeled as prices)
+  const wall = [0,1,2,3].map(i => {
+    const x = 300 + (i % 2) * 48, y = 70 + Math.floor(i / 2) * 42;
+    const pts = [0,8,16,10,24,18,32,12,40,20].reduce((s, v, j, a) => j % 2 ? s : s + `${j/2*8},${22-a[j+1]/4} `, "");
+    return `<g transform="translate(${x},${y})"><rect width="44" height="36" rx="3" fill="#0a0e14" stroke="#243041"/>
+      <polyline fill="none" stroke="${i % 2 ? "#3dffa8" : "#ff5468"}" stroke-width="1.2" points="${pts.trim()}"/></g>`;
+  }).join("");
+  return `<div class="floor-wrap" aria-hidden="true"><svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15202b"/><stop offset="1" stop-color="#0a1018"/></linearGradient></defs>
+    <rect width="400" height="200" fill="url(#fg)"/>
+    <text x="12" y="18" fill="#ffb648" font-size="11" font-family="ui-monospace,Menlo,monospace" font-weight="700">DESK FLOOR · PAPER</text>
+    <text x="12" y="32" fill="#7d8a9a" font-size="9" font-family="ui-monospace,Menlo,monospace">Scan · Quant · Size · Vet · Fills · Risk</text>
+    <!-- main wall screen -->
+    <rect x="290" y="40" width="100" height="28" rx="3" fill="#070b10" stroke="#3dffa8" stroke-opacity=".5"/>
+    <polyline fill="none" stroke="#5aa9ff" stroke-width="1.2" points="298,58 310,52 322,55 334,48 346,50 358,44 370,47 382,42"/>
+    ${wall}
+    <!-- couch / plant deco -->
+    <rect x="310" y="160" width="56" height="18" rx="4" fill="#15202b" stroke="#2a3544"/>
+    <circle cx="270" cy="168" r="8" fill="#1b4a33"/><circle cx="276" cy="162" r="5" fill="#2fd27a"/>
+    ${desks.map(desk).join("")}
+  </svg></div>`;
+}
+function deskRosterHTML() {
+  const hb = S.feed && S.feed.heartbeat;
+  const muted = (S.feed && S.feed.muted_tfs) || [];
+  const b = S.bias[sel];
+  const pb = paperBot;
+  const running = pb && pb.status === "running";
+  const fillsN = pb && pb.backtest && pb.backtest.totals_fee_0_35 ? pb.backtest.totals_fee_0_35.fills : 0;
+  const rows = [
+    { seat: "SCAN",  status: hb ? "live" : "no feed", call: hb ? `last scan ${tmd(hb.ts * 1000)} AMS · ${esc(hb.exchange || X.name)}` : "box feed not loaded", ok: !!hb },
+    { seat: "QUANT", status: b ? b.bias : "…", call: b ? biasWhy(b) : "waiting on 1H candles", ok: b && b.bias === "long" },
+    { seat: "SIZE",  status: fee2(X.fees.spot) + "/side", call: `${esc(X.feeNote)}`, ok: true },
+    { seat: "VET",   status: muted.length ? muted.length + " muted" : "clear", call: muted.length ? `weekly mute: ${muted.join(", ")}` : "no timeframes muted", ok: !muted.length },
+    { seat: "FILLS", status: running ? "PAPER live" : "not started", call: running ? "forward paper running" : `BACKTEST fills ${fillsN} (30d) · forward PAPER not started`, ok: running },
+    { seat: "RISK",  status: "ATR stops", call: "SL 1.5×ATR / TP 3×ATR (day) · SL 2× / TP 4× (swing)", ok: true },
+  ];
+  return `<div class="tpanel"><h3><span class="num">4</span> Desk roster</h3>
+    <table class="tt"><tr><th>Seat</th><th>Status</th><th>Last call</th></tr>
+    ${rows.map(r => `<tr><td><b>${r.seat}</b></td><td class="${r.ok ? "grn" : "amb"}">${esc(r.status)}</td><td class="mono">${esc(r.call)}</td></tr>`).join("")}
+    </table></div>`;
+}
+function modelInputsHTML(coin) {
+  const c = S.h1[coin] || [];
+  const b = S.bias[coin];
+  let pull = null, rsiCross = null, atrOk = null;
+  if (c.length > WARMUP) {
+    const ind = indicators(c), j = c.length - 1;
+    const touched = Math.min(c[j-2][3] - ind.e20[j-2], c[j-1][3] - ind.e20[j-1], c[j][3] - ind.e20[j]) <= 0;
+    pull = touched;
+    rsiCross = ind.rsi[j-1] != null && ind.rsi[j] != null && ind.rsi[j-1] < 50 && ind.rsi[j] >= 50;
+    atrOk = ind.atr[j] != null && ind.atr[j] > 0;
+  }
+  const items = [
+    { on: b && b.close > b.e50, label: "Price > EMA50 (1H)" },
+    { on: b && b.e20 > b.e50, label: "EMA20 > EMA50" },
+    { on: b && b.e50 > b.e50_prev, label: "EMA50 rising (vs 5 bars ago)" },
+    { on: b && b.rsi >= 50, label: "RSI(14) ≥ 50" },
+    { on: pull, label: "Pullback: low touched EMA20 (last 3)" },
+    { on: rsiCross, label: "RSI crossed up through 50" },
+    { on: atrOk, label: "ATR(14) ready → SL/TP levels" },
+  ];
+  return `<div class="tpanel"><h3><span class="num">5</span> Model inputs · ${esc(coin)} 1H</h3>
+    <ul class="check">${items.map(it => `<li><span class="box ${it.on ? "on" : "off"}">${it.on ? "✓" : "·"}</span><span>${esc(it.label)}${it.on == null ? " <span class='mut'>(loading)</span>" : ""}</span></li>`).join("")}</ul>
+    <p class="mono mut" style="margin:.35rem 0 0">Direction = first four · Entry also needs pullback + RSI cross + green close above EMA20. Live checks on last closed 1H candle.</p></div>`;
+}
+function quotePanelHTML(coin) {
+  const t = S.tick[coin] || {}, b = S.bias[coin];
+  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  return `<div class="tpanel"><h3><span class="num">1</span> Quote · ${esc(coin)}/${X.quote}</h3>
+    <div class="mono"><div style="font-size:1.35rem;font-weight:800;color:#fff">${t.err || t.last == null ? "—" : px(t.last)}</div>
+    <div class="${chg >= 0 ? "grn" : "red"}">${chg == null ? "—" : pct(chg)} 24h</div>
+    <div style="margin-top:.35rem">Vol ${volFmt(t.vol)} ${X.quote}</div>
+    <div>H ${t.high != null ? px(t.high) : "—"} · L ${t.low != null ? px(t.low) : "—"}</div>
+    <div style="margin-top:.35rem">1H ${b ? biasPill(b.bias) : "…"} <span class="mut">${esc(biasWhy(b))}</span></div>
+    <div class="mut" style="margin-top:.35rem">${esc(X.label)} public ticker · never invented</div></div></div>`;
+}
+function bankChartSVG() {
+  const pb = paperBot && paperBot.backtest;
+  if (bankMode === "intraday") {
+    return `<div class="bankchart" style="display:flex;align-items:center;justify-content:center"><span class="mono mut">Intraday PAPER equity — forward run not started</span></div>`;
+  }
+  if (!pb || !pb.equity_endpoints) {
+    return `<div class="bankchart" style="display:flex;align-items:center;justify-content:center"><span class="mono mut">No bank series yet</span></div>`;
+  }
+  const ep = pb.equity_endpoints;
+  const start = ep.start_usd, bot = ep.bot_end_usd, hold = ep.hold_end_usd;
+  const mn = Math.min(start, bot, hold) * 0.98, mx = Math.max(start, bot, hold) * 1.02;
+  const Y = v => 12 + (1 - (v - mn) / (mx - mn)) * 110;
+  const botPts = `20,${Y(start).toFixed(1)} 260,${Y(bot).toFixed(1)}`;
+  const holdPts = `20,${Y(start).toFixed(1)} 260,${Y(hold).toFixed(1)}`;
+  return `<div class="bankchart"><svg viewBox="0 0 280 140" width="100%" height="140" preserveAspectRatio="none">
+    <text x="8" y="12" fill="#ffb648" font-size="9" font-family="ui-monospace,Menlo,monospace">BACKTEST 30d · start→end only</text>
+    <polyline fill="none" stroke="#3dffa8" stroke-width="2" points="${botPts}"/>
+    <polyline fill="none" stroke="#5aa9ff" stroke-width="1.5" stroke-dasharray="4 3" points="${holdPts}"/>
+    <text x="8" y="132" fill="#3dffa8" font-size="9" font-family="ui-monospace,Menlo,monospace">Bot $${bot.toFixed(0)}</text>
+    <text x="100" y="132" fill="#5aa9ff" font-size="9" font-family="ui-monospace,Menlo,monospace">Hold $${hold.toFixed(0)}</text>
+    <text x="200" y="132" fill="#7d8a9a" font-size="9" font-family="ui-monospace,Menlo,monospace">Start $${start.toFixed(0)}</text>
+  </svg></div>`;
+}
+function bankPanelHTML() {
+  return `<div class="tpanel"><h3><span class="num">2</span> Desk bank vs hold</h3>
+    <div class="tfmini">
+      <button type="button" data-bankmode="intraday" class="${bankMode === "intraday" ? "on" : ""}">Intraday</button>
+      <button type="button" data-bankmode="history" class="${bankMode === "history" ? "on" : ""}">History</button>
+      <button type="button" data-bankrange="1D" class="${bankRange === "1D" ? "on" : ""}">1D</button>
+      <button type="button" data-bankrange="5D" class="${bankRange === "5D" ? "on" : ""}">5D</button>
+      <button type="button" data-bankrange="1M" class="${bankRange === "1M" ? "on" : ""}">1M</button>
+    </div>
+    ${bankChartSVG()}
+    <p class="mono mut" style="margin:.3rem 0 0">Forward PAPER not started. History = 30-day BACKTEST endpoints (fee 0.35%). 1D/5D/1M need a live paper equity series — none yet.</p></div>`;
+}
+function liveCandlePanelHTML(coin) {
+  const h = S.h1[coin] || [];
+  // lightweight SVG candles from last ~40 1H bars — real closes only
+  let chart = `<div class="livechart" style="display:flex;align-items:center;justify-content:center"><span class="mono mut">Loading ${esc(coin)} 1H…</span></div>`;
+  if (h.length > 5) {
+    const bars = h.slice(-40);
+    const lows = bars.map(k => k[3]), highs = bars.map(k => k[2]);
+    const mn = Math.min(...lows), mx = Math.max(...highs), span = mx - mn || 1;
+    const W = 280, H = 160, pad = 8, bw = (W - 2 * pad) / bars.length;
+    const Y = v => pad + (1 - (v - mn) / span) * (H - 2 * pad);
+    const body = bars.map((k, i) => {
+      const x = pad + i * bw + bw * 0.15;
+      const up = k[4] >= k[1];
+      const y1 = Y(Math.max(k[1], k[4])), y2 = Y(Math.min(k[1], k[4]));
+      const col = up ? "#2fd27a" : "#ff5468";
+      return `<line x1="${(x+bw*0.35).toFixed(1)}" y1="${Y(k[2]).toFixed(1)}" x2="${(x+bw*0.35).toFixed(1)}" y2="${Y(k[3]).toFixed(1)}" stroke="${col}" stroke-width="1"/>
+        <rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${(bw*0.7).toFixed(1)}" height="${Math.max(1, y2-y1).toFixed(1)}" fill="${col}"/>`;
+    }).join("");
+    chart = `<div class="livechart"><svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">${body}</svg></div>`;
+  }
+  return `<div class="tpanel"><h3><span class="num">3</span> Live candles · ${esc(coin)} 1H</h3>${chart}
+    <p class="mono mut" style="margin:.3rem 0 0">Last ${Math.min(40, h.length)} closed ${X.label} 1H candles. Tap a coin page for full TF chart + EMA20/50.</p></div>`;
+}
+function tradeRecapHTML() {
+  // Prefer Mike's logbook (device); else BACKTEST per-coin recap; else empty
+  const closed = (logbook || []).filter(t => t.exit != null).slice().sort((a, b) => b.t - a.t).slice(0, 12);
+  let rows = "";
+  let src = "";
+  if (closed.length) {
+    src = "Logbook (this device)";
+    rows = closed.map(t => {
+      const c = tradeCalc(t, feeOf(t));
+      return `<tr><td>${esc(t.pair)}</td><td class="n">${px(t.entry)}</td><td class="n">${px(t.exit)}</td>
+        <td class="n ${c.pct >= 0 ? "grn" : "red"}">${pct(c.pct, 2)}</td><td class="n">${t.size}</td>
+        <td class="n ${c.pnl >= 0 ? "grn" : "red"}">${amt(c.pnl, qOf(t.ex))}</td></tr>`;
+    }).join("");
+  } else if (paperBot && paperBot.backtest && paperBot.backtest.recap_rows) {
+    src = "BACKTEST 30d (not live fills)";
+    rows = paperBot.backtest.recap_rows.map(r => `<tr>
+      <td><span class="amb">BT</span> ${esc(r.coin)}</td><td class="n">${px(r.entry)}</td><td class="n">${px(r.exit)}</td>
+      <td class="n ${r.pct >= 0 ? "grn" : "red"}">${pct(r.pct)}</td><td class="n">$${r.size_usd.toFixed(0)}</td>
+      <td class="n ${r.pnl >= 0 ? "grn" : "red"}">${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}</td></tr>`).join("");
+  } else {
+    rows = `<tr><td colspan="6" class="mut">No closed logbook trades and no backtest recap loaded.</td></tr>`;
+    src = "empty";
+  }
+  return `<div class="tpanel span2"><h3><span class="num">6</span> Trade recap · ${esc(src)}</h3>
+    <div class="scroll"><table class="tt"><tr><th>Out</th><th class="n">Entry</th><th class="n">Exit</th><th class="n">%</th><th class="n">Size</th><th class="n">P&amp;L</th></tr>${rows}</table></div>
+    <p class="mono mut" style="margin:.3rem 0 0">PAPER only. Forward paper fills appear here once Mike starts the paper run. BACKTEST rows are 30-day per-coin start→end, not tick fills.</p></div>`;
+}
+function scrollingLogHTML() {
+  const lines = [];
+  const alerts = ((S.feed && S.feed.alerts) || []).slice(0, 25);
+  alerts.forEach(a => {
+    const when = tmd((a.ts > 1e12 ? a.ts : a.ts * 1000));
+    const cls = a.status === "open" ? "ev-a" : (a.net >= 0 ? "ev-g" : "ev-r");
+    const res = a.status === "open" ? "OPEN" : `${esc(a.status)} ${pct(a.net, 2)}`;
+    lines.push(`<div class="${cls}">${when} AMS · ${esc(a.pair)} ${esc(a.tf)} · entry ${px(a.entry)} TP ${px(a.tp)} SL ${px(a.sl)} · ${res}${a.pushed ? " · pushed" : ""}</div>`);
+  });
+  (S.sigs || []).slice(0, 8).forEach(s => {
+    lines.push(`<div class="ev-g">${tmd(s.t)} AMS · SIGNAL ${esc(s.pair)} ${esc(s.tf)} LONG entry ${px(s.entry)} TP ${px(s.tp)} SL ${px(s.sl)}</div>`);
+  });
+  if (!lines.length) lines.push(`<div class="mut">No ticket or signal events in the feed yet.</div>`);
+  const body = lines.concat(lines).join(""); // duplicate for seamless scroll
+  return `<div class="tlog" aria-label="event log"><div class="tlog-inner">${body}</div></div>`;
+}
+function paperStripHTML() {
+  const pb = paperBot;
+  if (!pb) return `<div class="tpanel span2"><h3>PAPER grid + DCA</h3><p class="mono mut">paper_bot.json not loaded</p></div>`;
+  const running = pb.status === "running" && pb.paper;
+  if (running) {
+    const P = pb.paper;
+    return `<div class="tpanel span2"><h3>PAPER grid + DCA · live</h3>
+      <p class="mono">Balance <b>$${(P.balance_usd || P.equity_usd || 0).toFixed(2)}</b> · PnL <b class="${(P.pnl_usd||0)>=0?"grn":"red"}">${amt(P.pnl_usd||0,"USD")}</b></p></div>`;
+  }
+  const bt = pb.backtest || {}, tot = bt.totals_fee_0_35 || {};
+  return `<div class="tpanel span2 paper-panel"><h3>PAPER grid + DCA · not started</h3>
+    <p class="mono amb">Forward paper run needs Mike's ok. Showing 30-day BACKTEST only.</p>
+    <div class="statgrid" style="margin-top:.4rem">
+      <div>Bot end<b>$${(tot.ending_value||0).toFixed(2)}</b></div>
+      <div>Hold end<b>$${(bt.hold_fee_0_35&&bt.hold_fee_0_35.ending_value||0).toFixed(2)}</b></div>
+      <div>Grid profit<b class="grn">$${(tot.grid_profit||0).toFixed(2)}</b></div>
+      <div>Fills<b>${tot.fills||0}</b></div>
+    </div></div>`;
+}
 function bindDashNav(el) {
   el.querySelectorAll("[data-band]").forEach(b => b.onclick = () => navigate({ kind: "band", band: b.dataset.band }));
   el.querySelectorAll("[data-coin]").forEach(b => b.onclick = () => navigate({ kind: "coin", coin: b.dataset.coin }));
   el.querySelectorAll("[data-dashhome]").forEach(b => b.onclick = () => navigate({ kind: "dash" }));
+  el.querySelectorAll("[data-selcoin]").forEach(b => b.onclick = () => { sel = b.dataset.selcoin; lsSet("okx_sel", sel); renderDash(); refresh(true); });
+  el.querySelectorAll("[data-bankmode]").forEach(b => b.onclick = () => { bankMode = b.dataset.bankmode; renderDash(); });
+  el.querySelectorAll("[data-bankrange]").forEach(b => b.onclick = () => { bankRange = b.dataset.bankrange; renderDash(); });
   bindTop(el);
 }
 function renderDash() {
   const el = $("v-dash"); if (!el) return;
-  const top = `<div class="card" style="padding:.7rem 1rem"><div class="row"><span class="sm mut">Exchange</span>${exChips()}<span class="sp"></span>
-    <span class="xs mut">Cutoffs: Low &lt; $1 · Mid $1–$100 · High &gt; $100</span></div>${hiddenNote()}</div>`;
-  if (S.err.day && !Object.keys(S.tick).length) { el.innerHTML = top + errBanner("day") + paperPanelHTML(); bindDashNav(el); return; }
-  if (!Object.keys(S.tick).length) { el.innerHTML = top + `<div class="card"><p class="sm mut" style="margin:0">Loading live ${X.label} prices for the dashboard…</p></div>` + paperPanelHTML(); bindDashNav(el); return; }
+  const termOpen = `<div class="term">`;
+  const termClose = `</div>`;
+  if (S.err.day && !Object.keys(S.tick).length) {
+    el.innerHTML = termOpen + tickerHTML() + errBanner("day") + deskFloorSVG() + paperStripHTML() + termClose;
+    bindDashNav(el); return;
+  }
+  if (!Object.keys(S.tick).length) {
+    el.innerHTML = termOpen + tickerHTML() + deskFloorSVG() + `<div class="tpanel"><p class="mono mut">Loading live ${X.label} desk data…</p></div>` + termClose;
+    bindDashNav(el); return;
+  }
 
+  // ---- All overview ----
   if (dashBand === "all") {
     const coins = listed().slice().sort((a, b) => (S.tick[b]?.last || 0) - (S.tick[a]?.last || 0));
-    el.innerHTML = top + errBanner("day") + `
-      <div class="card"><div class="row"><button class="coin-head back" data-dashhome type="button">← Dash</button>
-        <h2 style="margin:0">All coins</h2><span class="sp"></span><span class="pill p-amb">${coins.length} tracked</span></div>
-        <p class="sm mut" style="margin:.4rem 0 .7rem">Every watchlist coin on ${X.label}. Tap a tile for its own chart page (<code>#/coin/BTC</code>).</p>
-        <div class="allgrid">${coins.length ? coins.map(allTileHTML).join("") : `<p class="sm mut">No coins listed on ${X.label}.</p>`}</div>
-        ${srcLine("compact overview · sparkline = last 48 closed 1H candles")}
-      </div>`;
-    bindDashNav(el); return;
-  }
-  if (dashBand && PRICE_BANDS[dashBand]) {
-    const B = PRICE_BANDS[dashBand], coins = bandCoins(dashBand);
-    const unk = listed().filter(c => { const t = S.tick[c]; return !t || t.err || bandOf(t.last) == null; });
-    el.innerHTML = top + errBanner("day") + `
-      <div class="card"><div class="row"><button class="coin-head back" data-dashhome type="button">← Dash</button>
-        <h2 style="margin:0">${esc(B.label)} coins</h2><span class="sp"></span><span class="pill p-amb">${esc(B.cut)}</span></div>
-        <p class="sm mut" style="margin:.4rem 0 .7rem">Coins on your watchlist with a live ${X.label} price in this band. Tap a coin for its own chart page.</p>
-        <div class="dcards">${coins.length ? coins.map(coinCardHTML).join("") : `<p class="sm mut">No watchlist coin is in this band right now.</p>`}</div>
-        ${unk.length ? `<p class="xs amb" style="margin-top:.6rem">No price yet: ${esc(unk.join(", "))}</p>` : ""}
-        ${srcLine("sparkline = last 48 closed 1H candles")}
-      </div>`;
+    el.innerHTML = termOpen + tickerHTML() + `
+      <div class="row"><button class="coin-head back" data-dashhome type="button">← Floor</button>
+        <h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">All coins</h2>
+        <span class="badge b-paper">${coins.length} TRACKED</span></div>
+      ${deskNavHTML("all")}
+      <div class="allgrid">${coins.length ? coins.map(allTileHTML).join("") : `<p class="mono mut">No coins listed on ${X.label}.</p>`}</div>
+      ${scrollingLogHTML()}
+      <p class="mono mut" style="margin:.4rem 0 0">${srcLine("All overview · sparkline = last 48×1H").replace(/<\/?p[^>]*>/g, "")}</p>` + termClose;
     bindDashNav(el); return;
   }
 
-  // Hub: three group screens + all-coin strip + paper panel
-  const counts = Object.fromEntries(BAND_ORDER.map(id => [id, bandCoins(id).length]));
-  const nAll = listed().length;
-  const heroes = BAND_ORDER.map(id => {
-    const B = PRICE_BANDS[id];
-    return `<button class="band-tile" data-band="${id}" type="button"><h3>${esc(B.label)}</h3><div class="cut">${esc(B.cut)}</div><div class="n">${counts[id]}</div><div class="xs mut">coin${counts[id] === 1 ? "" : "s"} · open group</div></button>`;
-  }).join("") + `<button class="band-tile" data-band="all" type="button"><h3>All coins</h3><div class="cut">every tracked coin</div><div class="n">${nAll}</div><div class="xs mut">coin${nAll === 1 ? "" : "s"} · open overview</div></button>`;
-  const all = listed().slice().sort((a, b) => (S.tick[b]?.last || 0) - (S.tick[a]?.last || 0));
-  el.innerHTML = top + errBanner("day") + `
-    <div class="card"><h2>Coin dashboard</h2>
-      <p class="sm mut" style="margin:.2rem 0 .7rem">Watchlist coins grouped by live price, plus an All overview. Each group is its own screen; each coin has its own chart page (<code>#/coin/BTC</code>).</p>
-      <div class="band-hero">${heroes}</div></div>
-    ${paperPanelHTML()}
-    <div class="card"><h2>All tracked coins</h2>
-      <div class="dcards">${all.map(coinCardHTML).join("") || `<p class="sm mut">No coins listed on ${X.label}.</p>`}</div>
-      ${srcLine("sparkline = last 48 closed 1H candles · vol = 24h quote volume")}
-    </div>`;
+  // ---- High / Mid / Low ----
+  if (dashBand && PRICE_BANDS[dashBand]) {
+    const B = PRICE_BANDS[dashBand], coins = bandCoins(dashBand);
+    el.innerHTML = termOpen + tickerHTML() + `
+      <div class="row"><button class="coin-head back" data-dashhome type="button">← Floor</button>
+        <h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">${esc(B.label)}</h2>
+        <span class="badge b-paper">${esc(B.cut)}</span></div>
+      ${deskNavHTML(dashBand)}
+      <div class="dcards">${coins.length ? coins.map(coinCardHTML).join("") : `<p class="mono mut">No watchlist coin in this band right now.</p>`}</div>
+      ${scrollingLogHTML()}
+      <p class="mono mut" style="margin:.4rem 0 0">${srcLine("sparkline = last 48 closed 1H candles").replace(/<\/?p[^>]*>/g, "")}</p>` + termClose;
+    bindDashNav(el); return;
+  }
+
+  // ---- Hub = Desk Floor ----
+  const chips = listed().map(c => `<button class="chip ${c === sel ? "on" : ""}" data-selcoin="${esc(c)}">${esc(c)}</button>`).join("");
+  el.innerHTML = termOpen + tickerHTML() + deskFloorSVG() + `
+    ${deskNavHTML(null)}
+    <div class="row" style="margin:.2rem 0 .5rem"><span class="mono mut">Selected for panels</span><div class="chips">${chips}</div>
+      <span class="sp"></span>${exChips()}<span class="badge b-paper">PAPER · NO ORDERS</span></div>
+    ${errBanner("day")}
+    <div class="tgrid">
+      ${quotePanelHTML(sel)}
+      ${bankPanelHTML()}
+      ${liveCandlePanelHTML(sel)}
+      ${deskRosterHTML()}
+      ${modelInputsHTML(sel)}
+      ${paperStripHTML()}
+      ${tradeRecapHTML()}
+    </div>
+    ${scrollingLogHTML()}
+    <p class="mono mut" style="margin:.45rem 0 0">Desks map to real OKX Desk functions. Numbers from ${X.label} public data, the box feed, your logbook, or the labeled 30-day BACKTEST — never invented. Forward PAPER not started.</p>` + termClose;
   bindDashNav(el);
 }
 
@@ -1389,41 +1653,38 @@ async function loadCoinPage() {
 function renderCoin() {
   const el = $("v-coin"); if (!el) return;
   const coin = coinPage.coin;
-  if (!coin) { el.innerHTML = `<div class="card"><p class="sm mut">No coin selected.</p><button class="btn ghost" data-dashhome>Back to Dash</button></div>`; bindDashNav(el); return; }
-  const t = S.tick[coin] || {}, b = S.bias[coin], band = bandOf(t.last);
+  if (!coin) { el.innerHTML = `<div class="term"><div class="tpanel"><p class="mono mut">No coin selected.</p><button class="coin-head back" data-dashhome type="button">← Floor</button></div></div>`; bindDashNav(el); return; }
+  const tk = S.tick[coin] || {}, b = S.bias[coin], band = bandOf(tk.last);
   const B = band ? PRICE_BANDS[band] : null;
-  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  const chg = tk.last && tk.open ? (tk.last / tk.open - 1) * 100 : null;
   const tfs = COIN_TFS.map(tf => `<button class="chip ${tf === coinPage.tf ? "on" : ""}" data-ctf="${tf}">${tf === "1H" ? "1h" : tf === "4H" ? "4h" : tf === "1D" ? "1D" : tf}</button>`).join("");
-  const sigs = (coinPage.sigs || []).map(s => sigCard(s)).join("") || `<p class="sm mut">No fresh day signal on 5m/15m/30m/1H right now.</p>`;
-  el.innerHTML = `
-    <div class="card"><div class="coin-head">
-      <button class="back" data-dashhome type="button">← Dash</button>
+  const sigs = (coinPage.sigs || []).map(s => sigCard(s)).join("") || `<p class="mono mut">No fresh day signal on 5m/15m/30m/1H right now.</p>`;
+  el.innerHTML = `<div class="term">${tickerHTML()}
+    <div class="coin-head">
+      <button class="back" data-dashhome type="button">← Floor</button>
+      <button class="back" data-band="all" type="button">All</button>
       ${B ? `<button class="back" data-band="${B.id}" type="button">${esc(B.label)}</button>` : ""}
-      <h2 style="margin:0">${esc(coin)}/${X.quote}</h2>
+      <h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">${esc(coin)}/${X.quote}</h2>
       <span class="badge b-paper">LIVE · ${esc(X.label)}</span>
       <span class="sp"></span>${b ? biasPill(b.bias) : ""}
     </div>
-    <div class="row" style="margin:.3rem 0 .5rem"><span class="px" style="font-size:1.5rem;font-weight:800">${t.err ? "—" : px(t.last)}</span>
-      <span class="sm ${chg >= 0 ? "grn" : "red"}">${chg == null ? "" : pct(chg) + " 24h"}</span>
-      <span class="xs mut">Vol ${volFmt(t.vol)} ${X.quote}${t.high ? ` · H ${px(t.high)} L ${px(t.low)}` : ""}</span></div>
-    <div class="tfbar">${tfs}<span class="xs mut" style="align-self:center;margin-left:.3rem">EMA20 blue · EMA50 amber</span></div>
-    ${S.err.coin ? `<div class="banner bn-red">${esc(S.err.coin)}</div>` : ""}
-    <div id="coinChart"></div>
-    <p class="xs mut" style="margin:.4rem 0 0">${srcLine("own page · closed candles only").replace(/^<p[^>]*>/, "").replace(/<\/p>$/, "")}</p>
-    </div>
-    <div class="card"><h2>Key stats · 1H direction</h2>
-      <div class="statgrid">
-        <div>1H bias<b>${b ? esc(b.bias.toUpperCase()) : "-"}</b></div>
-        <div>RSI(14)<b>${b && b.rsi != null ? b.rsi.toFixed(1) : "-"}</b></div>
-        <div>EMA20<b>${b && b.e20 != null ? px(b.e20) : "-"}</b></div>
-        <div>EMA50<b>${b && b.e50 != null ? px(b.e50) : "-"}</b></div>
+    ${deskNavHTML(band || null)}
+    <div class="tgrid">
+      ${quotePanelHTML(coin)}
+      ${modelInputsHTML(coin)}
+      <div class="tpanel span2"><h3><span class="num">3</span> Live chart · ${esc(coinPage.tf)} · EMA20/50</h3>
+        <div class="tfbar">${tfs}<span class="mono mut" style="align-self:center;margin-left:.3rem">EMA20 blue · EMA50 amber</span></div>
+        ${S.err.coin ? `<div class="banner bn-red">${esc(S.err.coin)}</div>` : ""}
+        <div id="coinChart"></div>
+        <p class="mono mut" style="margin:.35rem 0 0">Closed ${X.label} candles only. Own page route <code>#/coin/${esc(coin)}</code>.</p>
       </div>
-      <p class="xs mut" style="margin:.5rem 0 0">${esc(biasWhy(b))}. Direction rule: price &gt; EMA50, EMA20 &gt; EMA50, EMA50 rising, RSI ≥ 50 → LONG.</p>
+      <div class="tpanel span2"><h3>Recent signals</h3>${sigs}</div>
     </div>
-    <div class="card"><h2>Recent signals</h2>${sigs}</div>`;
+    ${scrollingLogHTML()}
+  </div>`;
   bindDashNav(el);
-  el.querySelectorAll("[data-ctf]").forEach(b => b.onclick = () => {
-    coinPage.tf = b.dataset.ctf;
+  el.querySelectorAll("[data-ctf]").forEach(btn => btn.onclick = () => {
+    coinPage.tf = btn.dataset.ctf;
     loadCoinPage().then(() => { renderCoin(); if (coinPage.candles) buildCoinChart(coinPage.candles); });
   });
   if (coinPage.candles && coinPage.candles.length) setTimeout(() => buildCoinChart(coinPage.candles), 30);

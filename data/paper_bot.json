@@ -79,7 +79,46 @@
       "fills": 6,
       "portfolio_mdd_pct": 18.3658,
       "max_coin_mdd_pct": 24.4103
-    }
+    },
+    "equity_endpoints": {
+      "label": "BACKTEST 30d start\u2192end only (no bar-by-bar equity series published)",
+      "start_usd": 1000.0,
+      "bot_end_usd": 923.2996,
+      "hold_end_usd": 840.6591,
+      "generated_at_ams": "2026-11-09T16:42:41.500663+01:00"
+    },
+    "recap_rows": [
+      {
+        "out": "BACKTEST",
+        "coin": "BTC",
+        "entry": 83057.6,
+        "exit": 74896.3,
+        "pct": -9.826072508716843,
+        "size_usd": 333.3333333333333,
+        "pnl": -18.259133333333295,
+        "note": "grid $5.06 \u00b7 fees $4.25 \u00b7 58 fills"
+      },
+      {
+        "out": "BACKTEST",
+        "coin": "ETH",
+        "entry": 2511.87,
+        "exit": 2129.28,
+        "pct": -15.231281873663837,
+        "size_usd": 333.3333333333333,
+        "pnl": -25.383033333333287,
+        "note": "grid $5.74 \u00b7 fees $3.75 \u00b7 50 fills"
+      },
+      {
+        "out": "BACKTEST",
+        "coin": "SOL",
+        "entry": 110.49,
+        "exit": 87.32,
+        "pct": -20.97022354964251,
+        "size_usd": 333.3333333333333,
+        "pnl": -33.058233333333305,
+        "note": "grid $4.61 \u00b7 fees $2.92 \u00b7 40 fills"
+      }
+    ]
   },
   "paper": null
 }
