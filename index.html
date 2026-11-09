@@ -417,12 +417,12 @@ function logStats(rows) {     // rows: [{t, c}] closed only
     avgR: rs.length ? rs.reduce((a, x) => a + x.c.r, 0) / rs.length : null, nR: rs.length, best: s[n - 1], worst: s[0],
     avgPct: rows.reduce((a, x) => a + x.c.pct, 0) / n};
 }
-const LOG_COLS = ["id", "open_time_ams", "close_time_ams", "exchange", "pair", "market", "leverage", "side", "entry", "exit", "size", "fees", "stop_loss", "take_profit", "setup", "signal", "notes"];
+const LOG_COLS = ["id", "open_time_ams", "close_time_ams", "exchange", "pair", "market", "leverage", "side", "entry", "exit", "size", "fees", "stop_loss", "take_profit", "setup", "signal", "notes", "regime"];
 const csvCell = v => { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) || /^[=+\-@]/.test(v) && isNaN(+v) ? '"' + (/^[=+\-@]/.test(v) && isNaN(+v) ? "'" : "") + v.replace(/"/g, '""') + '"' : v; };
 function logToCsv(list, feeOf) {
   const head = [...LOG_COLS, "pnl", "pnl_pct", "r_multiple"];
   const lines = list.map(t => { const c = tradeCalc(t, feeOf ? feeOf(t) : 0);
-    return [t.id, msToAms(t.t), t.tc ? msToAms(t.tc) : "", t.ex, t.pair, t.market, t.market === "perp" ? t.lev : "", t.side, t.entry, t.exit ?? "", t.size, t.fees ?? "", t.sl ?? "", t.tp ?? "", t.setup || "", t.signal || "", t.notes || "",
+    return [t.id, msToAms(t.t), t.tc ? msToAms(t.tc) : "", t.ex, t.pair, t.market, t.market === "perp" ? t.lev : "", t.side, t.entry, t.exit ?? "", t.size, t.fees ?? "", t.sl ?? "", t.tp ?? "", t.setup || "", t.signal || "", t.notes || "", t.regime || "",
       c.open ? "" : c.pnl.toFixed(8), c.open ? "" : c.pct.toFixed(4), c.r == null ? "" : c.r.toFixed(4)].map(csvCell).join(","); });
   return [head.join(","), ...lines].join("\r\n") + "\r\n";
 }
@@ -457,15 +457,17 @@ function validTrade(d) {     // returns a clean trade or throws a readable error
   if (t.exit != null && !t.tc) t.tc = t.t;
   t.setup = LOG_SETUPS.includes(d.setup) ? d.setup : "manual";
   t.signal = String(d.signal || "").slice(0, 120); t.notes = String(d.notes || "").slice(0, 1000);
+  if (d.regime && ["Bull", "Bear", "Unknown"].includes(d.regime)) { t.regime = d.regime; t.regime_backfilled = !!d.regime_backfilled; }
   return t;
 }
 function csvToTrades(text) {
   const rows = parseCsv(text); if (!rows.length) throw new Error("empty file");
-  const h = rows[0].map(x => x.trim()); if (!LOG_COLS.every(c => h.includes(c))) throw new Error("not an OKX Desk logbook CSV");
+  const h = rows[0].map(x => x.trim()); const NEED = LOG_COLS.filter(c => c !== "regime"); if (!NEED.every(c => h.includes(c))) throw new Error("not an OKX Desk logbook CSV");
   const ix = c => h.indexOf(c), ok = [], bad = [];
   rows.slice(1).forEach((r, i) => { const g = c => { const v = r[ix(c)] ?? ""; return v.startsWith("'") && /^'[=+\-@]/.test(v) ? v.slice(1) : v; };
     try { ok.push(validTrade({id: g("id"), t: g("open_time_ams"), tc: g("close_time_ams") || null, ex: g("exchange"), pair: g("pair"), market: g("market"), lev: g("leverage"), side: g("side"),
-      entry: g("entry"), exit: g("exit"), size: g("size"), fees: g("fees"), sl: g("stop_loss"), tp: g("take_profit"), setup: g("setup"), signal: g("signal"), notes: g("notes")})); }
+      entry: g("entry"), exit: g("exit"), size: g("size"), fees: g("fees"), sl: g("stop_loss"), tp: g("take_profit"), setup: g("setup"), signal: g("signal"), notes: g("notes"),
+      regime: g("regime") || null, regime_backfilled: true})); }
     catch (e) { bad.push(`row ${i + 2}: ${e.message}`); } });
   return {ok, bad};
 }
@@ -1086,7 +1088,7 @@ function logForm() {
 }
 function tradeRow(t) {
   const c = tradeCalc(t, feeOf(t)), q = qOf(t.ex), lv = t.market === "perp" ? ` ${t.lev}x` : "";
-  return `<div class="sig"><div class="row"><b>${esc(t.pair)}</b><span class="pill ${t.side === "long" ? "p-long" : "p-short"}">${t.side.toUpperCase()}</span><span class="sm">${t.market === "perp" ? "contract" + lv : "spot"} · ${esc(EX[t.ex].label)} · ${esc(t.setup)}</span>
+  return `<div class="sig"><div class="row"><b>${esc(t.pair)}</b><span class="pill ${t.side === "long" ? "p-long" : "p-short"}">${t.side.toUpperCase()}</span>${t.regime ? regimePill(t.regime) : ""}<span class="sm">${t.market === "perp" ? "contract" + lv : "spot"} · ${esc(EX[t.ex].label)} · ${esc(t.setup)}${t.regime_backfilled ? " · backfilled" : ""}</span>
     ${t.lev > MAX_LEV ? `<span class="pill p-short">OVER ${MAX_LEV}x</span>` : ""}<span class="sp"></span><span class="xs mut">${esc(msToAms(t.t))}</span></div>
     <div class="lv"><div>Entry<b>${px(t.entry)}</b></div><div>Exit<b>${c.open ? "open" : px(t.exit)}</b></div><div>P/L<b class="${c.open ? "" : c.pnl >= 0 ? "grn" : "red"}">${c.open ? "-" : amt(c.pnl, q)}</b></div><div>% · R<b>${c.open ? "-" : pct(c.pct, 2) + " · " + (c.r == null ? "-" : c.r.toFixed(2) + "R")}</b></div></div>
     <div class="xs mut" style="margin-top:.35rem">Size ${t.size} · SL ${t.sl ? px(t.sl) : "none"} · TP ${t.tp ? px(t.tp) : "-"}${c.plannedRR ? ` (plan 1:${c.plannedRR.toFixed(1)})` : ""} · fees ${amt(c.fees, q).replace("+", "")}${c.feesEst ? " est." : ""}${t.signal ? " · signal: " + esc(t.signal) : ""}${t.notes ? `<br>${esc(t.notes)}` : ""}</div>
@@ -1097,54 +1099,221 @@ function paperFor(setup) {
   const w = S.feed && S.feed.weekly; if (!w) return null;
   const tf = setup === "4H swing" ? "4H" : setup; const r = w.tfs && w.tfs[tf]; return r ? {s: r.backtest, label: w.label || "OKX"} : null;
 }
+
+// ---------- Regime PAPER logbooks (Bull / Bear / Unknown) ----------
+let regimeFeed = null, logRegimeTab = ls("okx_regime_tab", "Bull"), logShow = ls("okx_log_show", "mine"); // mine|paper|study
+async function loadRegimeFeed() {
+  try {
+    const r = await fetch(`data/regime.json?ts=${Date.now()}`, { cache: "no-store" });
+    regimeFeed = r.ok ? await r.json() : null;
+  } catch (e) { regimeFeed = null; }
+}
+function regimePill(r) {
+  if (r === "Bull") return `<span class="pill p-long">BULL</span>`;
+  if (r === "Bear") return `<span class="pill p-short">BEAR</span>`;
+  return `<span class="pill p-neutral">UNKNOWN</span>`;
+}
+function paperRowsFor(reg) {
+  const p = regimeFeed && regimeFeed.paper; return (p && p[reg]) ? p[reg] : [];
+}
+function studyRowsFor(reg) {
+  return ((regimeFeed && regimeFeed.studies) || []).filter(s => (s.regime || "Unknown") === reg);
+}
+function mineRowsFor(reg) {
+  return (logbook || []).filter(t => (t.regime || "Unknown") === reg);
+}
+function regimeStatsBlock(reg) {
+  const st = regimeFeed && regimeFeed.stats && regimeFeed.stats[reg];
+  const mine = mineRowsFor(reg).map(t => ({ t, c: tradeCalc(t, feeOf(t)) }));
+  const mineClosed = mine.filter(x => !x.c.open);
+  const mSt = logStats(mineClosed);
+  const paperClosed = paperRowsFor(reg).filter(a => a.status && a.status !== "open");
+  let by = "";
+  if (st && st.by_tf && st.by_tf.length) {
+    by = `<div class="scroll"><table class="tt"><tr><th>Setup</th><th>TF</th><th class="n">N</th><th class="n">Win</th><th class="n">Net</th></tr>
+      ${st.by_tf.map(b => `<tr><td>${esc(b.setup || "day")}</td><td>${esc(b.tf)}</td><td class="n">${b.n}</td>
+        <td class="n">${b.win_rate == null ? "-" : b.win_rate.toFixed(0) + "%"}</td>
+        <td class="n ${b.net >= 0 ? "grn" : "red"}">${pct(b.net, 2)}</td></tr>`).join("")}</table></div>`;
+  }
+  return `<div class="tpanel"><h3>${regimePill(reg)} PAPER stats</h3>
+    <div class="statgrid">
+      <div>Box paper trades<b>${st ? st.n : 0}</b></div>
+      <div>Box closed win<b>${st && st.win_rate != null ? st.win_rate.toFixed(0) + "%" : "-"}</b></div>
+      <div>Box net (after fees)<b class="${st && st.net >= 0 ? "grn" : "red"}">${st ? pct(st.net, 2) : "-"}</b></div>
+      <div>My logbook closed<b>${mSt.n || 0}</b></div>
+      <div>My win rate<b>${mSt.n ? mSt.win.toFixed(0) + "%" : "-"}</b></div>
+      <div>My P/L<b class="${mSt.pnl >= 0 ? "grn" : "red"}">${mSt.n ? amt(mSt.pnl) : "-"}</b></div>
+    </div>
+    <p class="mono mut" style="margin:.4rem 0 .2rem">Box paper by strategy / timeframe (after fees):</p>
+    ${by || `<p class="mono mut">No closed box paper trades in this regime yet.</p>`}
+  </div>`;
+}
+function trendHistoryHTML() {
+  const hist = (regimeFeed && regimeFeed.history) || [];
+  const live = regimeFeed && regimeFeed.live;
+  const rule = regimeFeed && regimeFeed.rule;
+  let liveCard = "";
+  if (live) {
+    const i = live.inputs || {};
+    liveCard = `<div class="tpanel"><h3>Live regime · ${esc(live.ts_ams || "")}</h3>
+      <div class="row">${regimePill(live.regime)}<span class="mono">BTC ${px(live.btc_price)}</span></div>
+      <div class="mono" style="margin-top:.4rem">1H ${esc(i.h1_bias || "-")} (RSI ${(i.h1_rsi != null ? i.h1_rsi.toFixed(1) : "-")}) · 1D ${esc(i.d1_bias || "-")} (RSI ${(i.d1_rsi != null ? i.d1_rsi.toFixed(1) : "-")})
+        · funding ${i.funding == null ? "—" : (i.funding * 100).toFixed(4) + "%"} · L/S ${i.ls_ratio == null ? "—" : i.ls_ratio.toFixed(2)}
+        · <span class="mut">${esc(i.reason || "")}</span></div>
+      <p class="mono mut" style="margin:.35rem 0 0">${esc(live.source || "")}</p></div>`;
+  }
+  const rows = hist.slice().reverse().map(h => {
+    const i = h.inputs || {};
+    return `<tr><td class="mono">${esc(h.ts_ams || tmd((h.ts || 0) * 1000))}</td><td>${regimePill(h.regime)}</td>
+      <td class="n">${px(h.btc_price)}</td><td class="mono">${esc(i.h1_bias || "-")}/${esc(i.d1_bias || "-")}</td>
+      <td class="n mono">${i.funding == null ? "—" : (i.funding * 100).toFixed(4) + "%"}</td>
+      <td class="n mono">${i.ls_ratio == null ? "—" : Number(i.ls_ratio).toFixed(2)}</td></tr>`;
+  }).join("") || `<tr><td colspan="6" class="mut">No daily snapshots yet.</td></tr>`;
+  return `${liveCard}
+    <div class="tpanel"><h3>Trend history · daily 00:00 Amsterdam</h3>
+      <div class="scroll"><table class="tt"><tr><th>When</th><th>Regime</th><th class="n">BTC</th><th>1H/1D</th><th class="n">Funding</th><th class="n">L/S</th></tr>${rows}</table></div>
+      <p class="mono mut" style="margin:.35rem 0 0">Rule: Bull = 1H+1D LONG and funding ≤ +0.01% and L/S ≤ 2.5. Bear = mirror (funding ≥ −0.01%, L/S ≥ 0.7). Else Unknown. Inputs stored for audit.</p>
+    </div>`;
+}
+function studySectionHTML(reg) {
+  const rows = studyRowsFor(reg);
+  return `<div class="tpanel"><h3>Study examples · not Mike's trades</h3>
+    <p class="mono mut" style="margin:0 0 .45rem">Placeholder for clips Mike sends later. Filed via <code>cli.py add-study</code>. Never counted in his stats.</p>
+    ${rows.length ? rows.map(s => `<div class="sig"><div class="row"><b>${esc(s.pair)}</b>${regimePill(s.regime)}<span class="sm">${esc(s.side)} · ${esc(s.tf)}</span>
+      <span class="sp"></span><span class="xs mut">${esc(s.source || "study")}</span></div>
+      <div class="lv"><div>Entry<b>${px(s.entry)}</b></div><div>Exit<b>${px(s.exit)}</b></div>
+        <div>%<b class="${s.exit >= s.entry ? "grn" : "red"}">${pct((s.exit / s.entry - 1) * 100)}</b></div>
+        <div>When<b class="xs">${esc(s.entry_time_ams || "")}</b></div></div>
+      ${s.notes ? `<div class="xs mut">${esc(s.notes)}</div>` : ""}</div>`).join("")
+      : `<p class="mono mut">No study examples in ${esc(reg)} yet.</p>`}
+  </div>`;
+}
+async function backfillMineRegimes() {
+  // Tag Mike's on-device logbook from live OKX public data at each entry (trend required; crowd best-effort)
+  if (!logbook.length) return;
+  const need = logbook.filter(t => !t.regime || t.regime_backfilled);
+  if (!need.length) return;
+  try {
+    // reuse published live rule + per-trade: fetch BTC candles once
+    const h1 = await EX.okx.candles("BTC-USDT", "1H");
+    const d1 = await EX.okx.candles("BTC-USDT", "1D");
+    let fundSeries = [], lsSeries = [];
+    try {
+      const d = await okxGet("https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&limit=100");
+      fundSeries = d.map(x => [+x.fundingTime, +(x.realizedRate || x.fundingRate)]).sort((a, b) => a[0] - b[0]);
+    } catch (e) {}
+    try {
+      const d = await okxGet("https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=BTC&period=1H");
+      lsSeries = d.map(x => [+x[0], +x[1]]).sort((a, b) => a[0] - b[0]);
+    } catch (e) {}
+    const nearest = (series, t, skew) => { let best = null; for (const [tt, v] of series) { if (tt <= t) best = [tt, v]; else break; } return best && t - best[0] <= skew ? best[1] : null; };
+    const detailAt = (c, tf, t) => {
+      const tfm = TF_MS[tf], cut = c.filter(k => k[0] + tfm <= t);
+      if (cut.length < WARMUP + 1) return null;
+      return biasDetail(cut, tf);
+    };
+    for (const tr of logbook) {
+      if (tr.regime && !tr.regime_backfilled) continue;
+      const t = tr.t;
+      const h = detailAt(h1, "1H", t), d = detailAt(d1, "1D", t);
+      const funding = nearest(fundSeries, t, 16 * 3600000), ls = nearest(lsSeries, t, 6 * 3600000);
+      let regime = "Unknown", reason = "mixed";
+      if (h && d && h.bias === "long" && d.bias === "long") {
+        if ((funding == null || funding <= 0.0001) && (ls == null || ls <= 2.5)) { regime = "Bull"; reason = "trends_up"; }
+        else reason = "bull_blocked";
+      } else if (h && d && h.bias === "short" && d.bias === "short") {
+        if ((funding == null || funding >= -0.0001) && (ls == null || ls >= 0.7)) { regime = "Bear"; reason = "trends_down"; }
+        else reason = "bear_blocked";
+      } else if (!h || !d) reason = "missing_trend";
+      else reason = `mixed:${h && h.bias}/${d && d.bias}`;
+      tr.regime = regime;
+      tr.regime_backfilled = true;
+      tr.regime_inputs = { h1_bias: h && h.bias, d1_bias: d && d.bias, funding, ls_ratio: ls, reason };
+    }
+    await saveLog(logbook);
+  } catch (e) { console.warn("regime backfill mine", e); }
+}
+
 function renderLog() {
   const el = $("v-log");
-  const rows = logbook.map(t => ({t, c: tradeCalc(t, feeOf(t))})), closed = rows.filter(x => !x.c.open), st = logStats(closed);
-  const groups = {}; closed.forEach(x => (groups[x.t.setup] = groups[x.t.setup] || []).push(x));
-  const qs = [...new Set(closed.map(x => qOf(x.t.ex)))].join("/");
-  const stats = st.n ? `<div class="sig"><div class="lv" style="grid-template-columns:repeat(3,1fr)"><div>Closed trades<b>${st.n}</b></div><div>Win rate<b>${st.win.toFixed(0)}%</b></div><div>Avg R<b>${st.avgR == null ? "-" : st.avgR.toFixed(2) + "R"}</b></div>
-      <div>Total P/L<b class="${st.pnl >= 0 ? "grn" : "red"}">${amt(st.pnl, qs)}</b></div><div>Best<b class="grn">${amt(st.best.c.pnl)}</b></div><div>Worst<b class="red">${amt(st.worst.c.pnl)}</b></div></div></div>
-    <p class="xs mut">Fees paid ${amt(st.fees).replace("+", "")} ${qs} · avg ${pct(st.avgPct, 2)} per trade on capital used. R uses ${st.nR} trades with a stop-loss.</p>
-    <div class="scroll"><table class="tbl"><tr><th>Setup</th><th class="n">Trades</th><th class="n">Win</th><th class="n">Avg R</th><th class="n">P/L</th><th class="n">App paper</th></tr>
-    ${Object.entries(groups).map(([k, g]) => { const s = logStats(g), pp = paperFor(k);
-      return `<tr><td><b>${esc(k)}</b></td><td class="n">${s.n}</td><td class="n">${s.win.toFixed(0)}%</td><td class="n">${s.avgR == null ? "-" : s.avgR.toFixed(2)}</td><td class="n ${s.pnl >= 0 ? "grn" : "red"}">${amt(s.pnl)}</td>
-        <td class="n xs">${pp && pp.s.n ? `${pp.s.win.toFixed(0)}% · ${pp.s.avg_r.toFixed(2)}R` : "-"}</td></tr>`; }).join("")}</table></div>
-    <p class="xs mut">App paper = the box's weekly paper results for that timeframe (${esc((S.feed && S.feed.weekly && S.feed.weekly.label) || "box")}, all watchlist coins, after fees): win rate · avg R. If you do clearly worse than paper, check entries, stops and fees.</p>`
-    : `<p class="sm mut">No closed trades yet. Stats, win rate, P/L and R appear here once you log a closed trade.</p>`;
-  el.innerHTML = `<div class="split"><div>${logForm()}</div><div>
-    <div class="card"><h2>Logbook stats</h2>${stats}</div>
-    <div class="card"><div class="row"><h2 style="margin:0">My trades</h2><span class="sp"></span><button class="chip" id="lCsv">Export CSV</button><button class="chip" id="lImp">Import CSV</button></div>
-      <p class="sm grn" id="lMsg">${esc(logMsg)}</p>${logbook.length ? logbook.slice().sort((a, b) => b.t - a.t).map(tradeRow).join("") : `<p class="sm mut">Nothing logged yet.</p>`}
-      <p class="xs mut">Only on this device, encrypted with your password (like holdings). Nothing goes to the box or the website. A CSV export is a plain, unencrypted file: keep it private.</p></div></div></div>`;
-  logMsg = "";
-  const sig = $("lSig"); if (sig) sig.onchange = () => { const s = window._logSigs[+sig.value]; logPre = s || null; renderLog(); };
-  const mk = $("lMk"); mk.onchange = () => { $("lHold").checked = mk.value === "spot"; if (mk.value === "perp" && !$("lLev").value) $("lLev").value = 2; };
-  if ($("lCancel")) $("lCancel").onclick = () => { logEdit = null; logPre = null; renderLog(); };
-  $("lSave").onclick = async () => {
-    const g = id => $(id).value, err = m => $("lErr").textContent = m;
-    const old = logEdit && logEdit !== "new" ? logbook.find(x => x.id === logEdit) : null;
-    let t; try { t = validTrade({id: old && old.id, t: g("lT"), tc: g("lTc") || null, ex: g("lEx"), pair: g("lPair"), market: g("lMk"), lev: g("lLev"), side: g("lSide"),
-      entry: g("lEntry"), exit: g("lExit"), size: g("lSize"), fees: g("lFees"), sl: g("lSl"), tp: g("lTp"), setup: g("lSetup"), signal: g("lSignal"), notes: g("lNotes")}); }
-    catch (e) { return err(e.message); }
-    if (!t.tc && t.exit != null) t.tc = Date.now();
-    if ($("lHold").checked) {
-      const wasOpen = !old || old.exit == null, nowOpen = t.exit == null;
-      if (!old && nowOpen) holdings = holdingsAfter(holdings, t, false);
-      else if (old && wasOpen && !nowOpen) holdings = holdingsAfter(holdings, t, true);
-      await saveHoldings(holdings);
+  const tabs = ["Bull", "Bear", "Unknown"].map(r =>
+    `<button class="chip ${logRegimeTab === r ? "on" : ""}" data-rtab="${r}">${r}</button>`).join("");
+  const show = [["mine", "My trades"], ["paper", "Box PAPER"], ["study", "Study examples"], ["trend", "Trend history"]]
+    .map(([k, lab]) => `<button class="chip ${logShow === k ? "on" : ""}" data-lshow="${k}">${lab}</button>`).join("");
+  const reg = logRegimeTab;
+  let body = "";
+  if (logShow === "trend") {
+    body = trendHistoryHTML();
+  } else {
+    body = regimeStatsBlock(reg);
+    if (logShow === "mine") {
+      const rows = mineRowsFor(reg).slice().sort((a, b) => b.t - a.t);
+      body += `<div class="tpanel"><h3>My trades · ${esc(reg)}</h3>
+        ${rows.length ? rows.map(tradeRow).join("") : `<p class="mono mut">No personal logbook trades tagged ${esc(reg)}. Add one below — regime is backfilled from OKX public data at entry.</p>`}
+        <p class="xs mut">Encrypted on this device. Regime backfilled tags are marked when derived from history.</p></div>`;
+      body += logForm();
+    } else if (logShow === "paper") {
+      const rows = paperRowsFor(reg);
+      body += `<div class="tpanel"><h3>Box PAPER alerts · ${esc(reg)} <span class="badge b-paper">PAPER · NO ORDERS</span></h3>
+        <div class="scroll"><table class="tt"><tr><th>When</th><th>Coin</th><th>TF</th><th class="n">Entry</th><th>Result</th><th>Tag</th></tr>
+        ${rows.length ? rows.map(a => `<tr><td class="mono">${tmd(a.ts * 1000)}</td><td>${esc(a.pair)}</td><td>${esc(a.tf)}</td>
+          <td class="n">${px(a.entry)}</td>
+          <td class="sm ${a.status === "open" ? "" : a.net >= 0 ? "grn" : "red"}">${a.status === "open" ? "open" : esc(a.status) + " " + pct(a.net, 2)}</td>
+          <td class="xs mut">${a.regime_backfilled ? "backfilled" : "live"}</td></tr>`).join("")
+          : `<tr><td colspan="6" class="mut">No box paper alerts in ${esc(reg)}.</td></tr>`}
+        </table></div></div>`;
+    } else if (logShow === "study") {
+      body += studySectionHTML(reg);
     }
-    logbook = old ? logbook.map(x => x.id === old.id ? t : x) : [...logbook, t];
-    await saveLog(logbook); logMsg = old ? "Saved." : "Added."; logEdit = null; logPre = null; renderLog();
-  };
-  el.querySelectorAll("[data-ledit]").forEach(b => b.onclick = () => { logEdit = b.dataset.ledit; logPre = null; renderLog(); $("logFormCard").scrollIntoView({behavior: "smooth"}); });
-  el.querySelectorAll("[data-ldel]").forEach(b => b.onclick = async () => { if (!confirm("Delete this trade from the logbook?")) return; logbook = logbook.filter(x => x.id !== b.dataset.ldel); await saveLog(logbook); logMsg = "Deleted."; renderLog(); });
-  $("lCsv").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([logToCsv(logbook, feeOf)], {type: "text/csv"})); a.download = `okx-desk-logbook-${msToAms(Date.now()).slice(0, 10)}.csv`; a.click(); };
-  $("lImp").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = ".csv,text/csv"; i.id = "lImpFile"; i.style.display = "none"; document.body.appendChild(i);
+  }
+  el.innerHTML = `<div class="term">
+    <div class="card" style="padding:.7rem 1rem;margin-bottom:.6rem">
+      <div class="row"><h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">PAPER logbooks</h2>
+        <span class="badge b-paper">BULL · BEAR · UNKNOWN</span><span class="sp"></span>
+        <button class="btn ghost" id="lCsv">Export CSV</button><button class="btn ghost" id="lImp">Import CSV</button></div>
+      <div class="chips" style="margin-top:.5rem">${tabs}</div>
+      <div class="chips" style="margin-top:.35rem">${show}</div>
+      <p class="sm grn" id="lMsg">${esc(logMsg)}</p>
+    </div>
+    ${body}
+  </div>`;
+  logMsg = "";
+  el.querySelectorAll("[data-rtab]").forEach(b => b.onclick = () => { logRegimeTab = b.dataset.rtab; lsSet("okx_regime_tab", logRegimeTab); renderLog(); });
+  el.querySelectorAll("[data-lshow]").forEach(b => b.onclick = () => { logShow = b.dataset.lshow; lsSet("okx_log_show", logShow); renderLog(); });
+  // form bindings only when mine form is present
+  if (logShow === "mine" && $("lSave")) {
+    const sig = $("lSig"); if (sig) sig.onchange = () => { const s = window._logSigs[+sig.value]; logPre = s || null; renderLog(); };
+    const mk = $("lMk"); if (mk) mk.onchange = () => { $("lHold").checked = mk.value === "spot"; if (mk.value === "perp" && !$("lLev").value) $("lLev").value = 2; };
+    if ($("lCancel")) $("lCancel").onclick = () => { logEdit = null; logPre = null; renderLog(); };
+    $("lSave").onclick = async () => {
+      const g = id => $(id).value, err = m => $("lErr").textContent = m;
+      const old = logEdit && logEdit !== "new" ? logbook.find(x => x.id === logEdit) : null;
+      let t; try { t = validTrade({id: old && old.id, t: g("lT"), tc: g("lTc") || null, ex: g("lEx"), pair: g("lPair"), market: g("lMk"), lev: g("lLev"), side: g("lSide"),
+        entry: g("lEntry"), exit: g("lExit"), size: g("lSize"), fees: g("lFees"), sl: g("lSl"), tp: g("lTp"), setup: g("lSetup"), signal: g("lSignal"), notes: g("lNotes")}); }
+      catch (e) { return err(e.message); }
+      if (!t.tc && t.exit != null) t.tc = Date.now();
+      t.regime = old && old.regime ? old.regime : "Unknown";
+      t.regime_backfilled = true;
+      if ($("lHold").checked) {
+        const wasOpen = !old || old.exit == null, nowOpen = t.exit == null;
+        if (!old && nowOpen) holdings = holdingsAfter(holdings, t, false);
+        else if (old && wasOpen && !nowOpen) holdings = holdingsAfter(holdings, t, true);
+        await saveHoldings(holdings);
+      }
+      logbook = old ? logbook.map(x => x.id === old.id ? t : x) : [...logbook, t];
+      await saveLog(logbook); await backfillMineRegimes(); logMsg = old ? "Saved." : "Added."; logEdit = null; logPre = null; renderLog();
+    };
+    el.querySelectorAll("[data-ledit]").forEach(b => b.onclick = () => { logEdit = b.dataset.ledit; logPre = null; renderLog(); $("logFormCard") && $("logFormCard").scrollIntoView({behavior: "smooth"}); });
+    el.querySelectorAll("[data-ldel]").forEach(b => b.onclick = async () => { if (!confirm("Delete this trade from the logbook?")) return; logbook = logbook.filter(x => x.id !== b.dataset.ldel); await saveLog(logbook); logMsg = "Deleted."; renderLog(); });
+  }
+  if ($("lCsv")) $("lCsv").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([logToCsv(logbook, feeOf)], {type: "text/csv"})); a.download = `okx-desk-logbook-${msToAms(Date.now()).slice(0, 10)}.csv`; a.click(); };
+  if ($("lImp")) $("lImp").onclick = () => { const i = document.createElement("input"); i.type = "file"; i.accept = ".csv,text/csv"; i.style.display = "none"; document.body.appendChild(i);
     i.onchange = async () => { try { const r = csvToTrades(await i.files[0].text()), ids = new Set(logbook.map(x => x.id));
-        const fresh = r.ok.filter(x => !ids.has(x.id)); logbook = [...logbook, ...fresh]; await saveLog(logbook);
-        logMsg = `Imported ${fresh.length} trade(s)` + (r.ok.length - fresh.length ? `, ${r.ok.length - fresh.length} already there` : "") + (r.bad.length ? `; skipped ${r.bad.length}: ${r.bad.slice(0, 3).join("; ")}` : "") + ".";
+        const fresh = r.ok.filter(x => !ids.has(x.id)); logbook = [...logbook, ...fresh]; await saveLog(logbook); await backfillMineRegimes();
+        logMsg = `Imported ${fresh.length} trade(s)` + (r.ok.length - fresh.length ? `, ${r.ok.length - fresh.length} already there` : "") + (r.bad.length ? `; skipped ${r.bad.length}` : "") + ".";
       } catch (e) { logMsg = "Import failed: " + e.message; } i.remove(); renderLog(); }; i.click(); };
 }
+
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-log]"); if (!b) return;
   try { logPre = JSON.parse(b.dataset.log); logPre.label = `${EX[logPre.ex].label} ${logPre.pair} ${logPre.kind === "perp" ? "contract " : ""}${logPre.tf} LONG @ ${px(logPre.entry)} · ${tmd(logPre.t)}`; logEdit = null; show("log"); } catch (x) {} });
 
@@ -1753,8 +1922,13 @@ async function refresh(force) {
   const v = view;
   try {
     const all = [];
-    if (v === "an" || v === "log") { if (!S.feed) await loadFeed(); return; }
-    if (v === "coin") {
+    if (v === "an") { if (!S.feed) await loadFeed(); return; }
+    if (v === "log") {
+      if (!S.feed) await loadFeed();
+      await loadRegimeFeed();
+      await backfillMineRegimes();
+      S.at = Date.now();
+    } else if (v === "coin") {
       try { await loadCoinPage(); } catch (e) { S.err.coin = e.message; }
       S.at = Date.now();
     } else {
@@ -1796,6 +1970,7 @@ async function start() {
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.v));
   registerSW();
   await loadPaperBot();
+  await loadRegimeFeed();
   if (parseRoute()) applyRoute();
   else show(RENDER[view] ? view : "day");
   setInterval(() => refresh(false), 60000);
