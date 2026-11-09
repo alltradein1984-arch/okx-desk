@@ -106,10 +106,18 @@ header h1{margin-left:-.2rem}
 .dcard .spark svg{width:100%;height:100%;display:block}
 .dcard .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-top:.55rem}
 .dcard .meta div{font-size:.7rem;color:var(--mut)}.dcard .meta b{display:block;font-size:.88rem;color:var(--txt);font-variant-numeric:tabular-nums}
-.band-hero{display:grid;grid-template-columns:1fr;gap:.6rem}
-@media (min-width:700px){.band-hero{grid-template-columns:repeat(3,1fr)}}
+.band-hero{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+@media (min-width:700px){.band-hero{grid-template-columns:repeat(4,1fr)}}
 .band-tile{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:1rem;cursor:pointer;color:inherit;font:inherit;text-align:left}
 .band-tile h3{margin:0 0 .25rem;font-size:1rem}.band-tile .cut{font-size:.78rem;color:var(--mut)}.band-tile .n{font-size:1.4rem;font-weight:800;margin-top:.4rem}
+.allgrid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+@media (min-width:700px){.allgrid{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:1100px){.allgrid{grid-template-columns:repeat(4,1fr)}}
+.alltile{display:block;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:.65rem .7rem;color:inherit;font:inherit;cursor:pointer}
+.alltile .sym{font-weight:800;font-size:.95rem}
+.alltile .px{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums;margin:.1rem 0}
+.alltile .spark{height:32px;margin-top:.25rem}
+.alltile .spark svg{width:100%;height:100%;display:block}
 .coin-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem}
 .coin-head .back{background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:.35rem .75rem;font:inherit;color:var(--txt);cursor:pointer}
 #coinChart{width:100%;height:320px;border-radius:12px;overflow:hidden;background:var(--card2);border:1px solid var(--line)}
@@ -1199,6 +1207,19 @@ function coinCardHTML(coin) {
     <div class="meta"><div>24h vol (${X.quote})<b>${volFmt(t.vol)}</b></div><div>1H direction<b>${b ? esc(b.bias.toUpperCase()) : "-"}</b></div><div>Candles<b>${h.length || "…"}</b></div></div>
     ${sigLine}</button>`;
 }
+function allTileHTML(coin) {
+  const t = S.tick[coin] || {}, h = S.h1[coin] || [];
+  const closes = h.slice(-48).map(k => k[4]);
+  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  const up = chg == null ? true : chg >= 0;
+  const b = S.bias[coin];
+  return `<button class="alltile" data-coin="${esc(coin)}" type="button">
+    <div class="row"><span class="sym">${esc(coin)}</span><span class="sp"></span>${b ? biasPill(b.bias) : ""}</div>
+    <div class="px">${t.err ? `<span class="red sm">no price</span>` : px(t.last)}</div>
+    <div class="xs ${up ? "grn" : "red"}">${chg == null ? "" : pct(chg)}</div>
+    <div class="spark">${sparkSVG(closes, up)}</div>
+  </button>`;
+}
 async function loadPaperBot() {
   try {
     const r = await fetch(`data/paper_bot.json?ts=${Date.now()}`, { cache: "no-store" });
@@ -1259,6 +1280,17 @@ function renderDash() {
   if (S.err.day && !Object.keys(S.tick).length) { el.innerHTML = top + errBanner("day") + paperPanelHTML(); bindDashNav(el); return; }
   if (!Object.keys(S.tick).length) { el.innerHTML = top + `<div class="card"><p class="sm mut" style="margin:0">Loading live ${X.label} prices for the dashboard…</p></div>` + paperPanelHTML(); bindDashNav(el); return; }
 
+  if (dashBand === "all") {
+    const coins = listed().slice().sort((a, b) => (S.tick[b]?.last || 0) - (S.tick[a]?.last || 0));
+    el.innerHTML = top + errBanner("day") + `
+      <div class="card"><div class="row"><button class="coin-head back" data-dashhome type="button">← Dash</button>
+        <h2 style="margin:0">All coins</h2><span class="sp"></span><span class="pill p-amb">${coins.length} tracked</span></div>
+        <p class="sm mut" style="margin:.4rem 0 .7rem">Every watchlist coin on ${X.label}. Tap a tile for its own chart page (<code>#/coin/BTC</code>).</p>
+        <div class="allgrid">${coins.length ? coins.map(allTileHTML).join("") : `<p class="sm mut">No coins listed on ${X.label}.</p>`}</div>
+        ${srcLine("compact overview · sparkline = last 48 closed 1H candles")}
+      </div>`;
+    bindDashNav(el); return;
+  }
   if (dashBand && PRICE_BANDS[dashBand]) {
     const B = PRICE_BANDS[dashBand], coins = bandCoins(dashBand);
     const unk = listed().filter(c => { const t = S.tick[c]; return !t || t.err || bandOf(t.last) == null; });
@@ -1275,14 +1307,15 @@ function renderDash() {
 
   // Hub: three group screens + all-coin strip + paper panel
   const counts = Object.fromEntries(BAND_ORDER.map(id => [id, bandCoins(id).length]));
+  const nAll = listed().length;
   const heroes = BAND_ORDER.map(id => {
     const B = PRICE_BANDS[id];
     return `<button class="band-tile" data-band="${id}" type="button"><h3>${esc(B.label)}</h3><div class="cut">${esc(B.cut)}</div><div class="n">${counts[id]}</div><div class="xs mut">coin${counts[id] === 1 ? "" : "s"} · open group</div></button>`;
-  }).join("");
+  }).join("") + `<button class="band-tile" data-band="all" type="button"><h3>All coins</h3><div class="cut">every tracked coin</div><div class="n">${nAll}</div><div class="xs mut">coin${nAll === 1 ? "" : "s"} · open overview</div></button>`;
   const all = listed().slice().sort((a, b) => (S.tick[b]?.last || 0) - (S.tick[a]?.last || 0));
   el.innerHTML = top + errBanner("day") + `
     <div class="card"><h2>Coin dashboard</h2>
-      <p class="sm mut" style="margin:.2rem 0 .7rem">Watchlist coins grouped by live price. Each group is its own screen; each coin has its own chart page (<code>#/coin/BTC</code>).</p>
+      <p class="sm mut" style="margin:.2rem 0 .7rem">Watchlist coins grouped by live price, plus an All overview. Each group is its own screen; each coin has its own chart page (<code>#/coin/BTC</code>).</p>
       <div class="band-hero">${heroes}</div></div>
     ${paperPanelHTML()}
     <div class="card"><h2>All tracked coins</h2>
@@ -1400,7 +1433,7 @@ function parseRoute() {
   const h = location.hash || "";
   let m = /^#\/coin\/([A-Za-z0-9]{2,12})(?:-USDT)?\/?$/i.exec(h);
   if (m) { const c = normCoin(m[1]); return c ? { kind: "coin", coin: c } : null; }
-  m = /^#\/dash\/(low|mid|high)\/?$/i.exec(h);
+  m = /^#\/dash\/(low|mid|high|all)\/?$/i.exec(h);
   if (m) return { kind: "band", band: m[1].toLowerCase() };
   if (/^#\/dash\/?$/i.test(h)) return { kind: "dash" };
   return null;
