@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https://www.okx.com https://api.bybit.com https://api.kraken.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://www.okx.com https://api.bybit.com https://api.kraken.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#07090c">
 <title>OKX Desk · multi-exchange signals</title>
 <script>
@@ -83,7 +83,7 @@ html[data-theme="light"] .btn{color:#fff}html[data-theme="light"] .btn.ghost{col
 .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem .6rem;margin:.6rem 0}.lgrid label{display:flex;flex-direction:column;font-size:.72rem;color:var(--mut);gap:.15rem}
 .lgrid .f,select.f{width:100%}select.f{font:inherit;font-size:.9rem;padding:.5rem;border-radius:.6rem;border:1px solid var(--line);background:var(--card2);color:var(--txt)}
 @media (min-width:960px){.lgrid{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:420px){nav.tabs button{font-size:.62rem}nav.tabs button svg{width:20px;height:20px}}
+@media (max-width:420px){nav.tabs button{font-size:.58rem;padding:.45rem 0 .5rem}nav.tabs button svg{width:18px;height:18px}}
 .exsel{font:inherit;font-weight:800;font-size:.95rem;letter-spacing:.04em;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.2rem .3rem}
 header h1{margin-left:-.2rem}
 #theme{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:99px;font-size:.72rem;padding:.2rem .6rem;cursor:pointer}
@@ -95,6 +95,31 @@ header h1{margin-left:-.2rem}
   .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start}
   #toast{bottom:1.2rem}
 }
+
+/* Dashboard + coin page */
+.dcards{display:flex;flex-direction:column;gap:.7rem}
+.dcard{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:.85rem 1rem;color:inherit;font:inherit;cursor:pointer}
+.dcard:active{transform:scale(.995)}
+.dcard .top{display:flex;align-items:flex-start;gap:.6rem}
+.dcard .sym{font-weight:800;font-size:1.05rem;letter-spacing:.02em}
+.dcard .spark{flex:1;min-width:0;height:42px}
+.dcard .spark svg{width:100%;height:100%;display:block}
+.dcard .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-top:.55rem}
+.dcard .meta div{font-size:.7rem;color:var(--mut)}.dcard .meta b{display:block;font-size:.88rem;color:var(--txt);font-variant-numeric:tabular-nums}
+.band-hero{display:grid;grid-template-columns:1fr;gap:.6rem}
+@media (min-width:700px){.band-hero{grid-template-columns:repeat(3,1fr)}}
+.band-tile{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:1rem;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.band-tile h3{margin:0 0 .25rem;font-size:1rem}.band-tile .cut{font-size:.78rem;color:var(--mut)}.band-tile .n{font-size:1.4rem;font-weight:800;margin-top:.4rem}
+.coin-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem}
+.coin-head .back{background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:.35rem .75rem;font:inherit;color:var(--txt);cursor:pointer}
+#coinChart{width:100%;height:320px;border-radius:12px;overflow:hidden;background:var(--card2);border:1px solid var(--line)}
+@media (min-width:960px){#coinChart{height:420px}}
+.paper-panel{border:1px solid #5a4614;background:#1a160c}
+html[data-theme="light"] .paper-panel{background:#fff8e8;border-color:#f0cf8a}
+.paper-panel .badge{margin-left:.4rem}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem}.statgrid div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:.55rem .65rem;font-size:.72rem;color:var(--mut)}.statgrid b{display:block;font-size:1rem;color:var(--txt);font-variant-numeric:tabular-nums}
+@media (min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
+.tfbar{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}
 </style>
 </head>
 <body>
@@ -105,6 +130,7 @@ header h1{margin-left:-.2rem}
 </header>
 <div id="lock"></div>
 <nav class="tabs" id="tabs" style="display:none">
+  <button data-v="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dash</button>
   <button data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Day</button>
   <button data-v="an"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Analyze</button>
   <button data-v="swing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12c3-6 6-6 9 0s6 6 9 0"/></svg>Swing</button>
@@ -114,6 +140,8 @@ header h1{margin-left:-.2rem}
   <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
 </nav>
 <main id="app" style="display:none">
+  <section class="view" id="v-dash"></section>
+  <section class="view" id="v-coin"></section>
   <section class="view" id="v-day"></section>
   <section class="view" id="v-an"></section>
   <section class="view" id="v-swing"></section>
@@ -123,6 +151,7 @@ header h1{margin-left:-.2rem}
   <section class="view" id="v-set"></section>
 </main>
 <div id="toast"></div>
+<script src="vendor/lightweight-charts.min.js"></script>
 <script>
 "use strict";
 // ==STRATEGY==  (twin of strategy.py - tests/test_parity.py runs both on the same candles)
@@ -492,7 +521,7 @@ const EX = {
   okx: {name: "okx", label: "OKX", quote: "USDT", fees: {spot: 0.001, perp: 0.0005},
     feeNote: "Regular tier: spot taker 0.10%, perpetual taker 0.05%", feeSrc: "https://www.okx.com/fees",
     perpInBrowser: true, perpName: "USDT perpetual swap", demo: "OKX Demo trading",
-    async tickers(insts) { return Promise.all(insts.map(i => okxGet(`https://www.okx.com/api/v5/market/ticker?instId=${i}`).then(d => ({last: +d[0].last, open: +d[0].open24h, openLabel: "24h"})).catch(e => ({err: e.message})))); },
+    async tickers(insts) { return Promise.all(insts.map(i => okxGet(`https://www.okx.com/api/v5/market/ticker?instId=${i}`).then(d => ({last: +d[0].last, open: +d[0].open24h, openLabel: "24h", vol: +d[0].volCcy24h || +d[0].vol24h || null, high: +d[0].high24h || null, low: +d[0].low24h || null})).catch(e => ({err: e.message})))); },
     async funding(id) { const d = await okxGet(`https://www.okx.com/api/v5/public/funding-rate-history?instId=${id}&limit=100`); return d.map(x => [+x.fundingTime, +(x.realizedRate || x.fundingRate)]).sort((a, b) => a[0] - b[0]); },
     async fundingNow(id) { const d = (await okxGet(`https://www.okx.com/api/v5/public/funding-rate?instId=${id}`))[0]; return {rate: +d.fundingRate, next: +d.fundingTime, periodH: 8}; },
     async mmr(coin) { const d = await okxGet(`https://www.okx.com/api/v5/public/position-tiers?instType=SWAP&tdMode=isolated&instFamily=${coin}-USDT&tier=1`); return d.length ? +d[0].mmr : 0.01; },
@@ -504,7 +533,7 @@ const EX = {
   bybit: {name: "bybit", label: "Bybit", quote: "USDT", fees: {spot: 0.001, perp: 0.00055},
     feeNote: "VIP 0: spot taker 0.10%, perpetual taker 0.055%", feeSrc: "https://www.bybit.com/en/help-center/article/Trading-Fee-Structure",
     perpInBrowser: true, perpName: "USDT perpetual", demo: "Bybit Demo Trading",
-    async tickers(insts) { return Promise.all(insts.map(i => bybitGet(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${i}`).then(d => ({last: +d.list[0].lastPrice, open: +d.list[0].prevPrice24h, openLabel: "24h"})).catch(e => ({err: e.message})))); },
+    async tickers(insts) { return Promise.all(insts.map(i => bybitGet(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${i}`).then(d => ({last: +d.list[0].lastPrice, open: +d.list[0].prevPrice24h, openLabel: "24h", vol: +d.list[0].turnover24h || +d.list[0].volume24h || null, high: +d.list[0].highPrice24h || null, low: +d.list[0].lowPrice24h || null})).catch(e => ({err: e.message})))); },
     async funding(id) { const d = await bybitGet(`https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${id}&limit=200`); return d.list.map(x => [+x.fundingRateTimestamp, +x.fundingRate]).sort((a, b) => a[0] - b[0]); },
     async fundingNow(id) { const d = (await bybitGet(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${id}`)).list[0]; return {rate: +d.fundingRate, next: +d.nextFundingTime, periodH: +d.fundingIntervalHour || 8}; },
     async mmr(coin) { const d = await bybitGet(`https://api.bybit.com/v5/market/risk-limit?category=linear&symbol=${EX.bybit.perpId(coin)}`); return d.list.length ? +d.list[0].maintenanceMargin : 0.01; },
@@ -519,7 +548,7 @@ const EX = {
     async tickers(insts) {
       if (!insts.length) return [];
       try { const d = await krakenGet(`https://api.kraken.com/0/public/Ticker?pair=${insts.join(",")}`);
-        return insts.map(i => d[i] ? {last: +d[i].c[0], open: +d[i].o, openLabel: "today UTC"} : {err: "no Kraken ticker"}); }
+        return insts.map(i => d[i] ? {last: +d[i].c[0], open: +d[i].o, openLabel: "today UTC", vol: +(d[i].v && d[i].v[1]) || null, high: +d[i].h[1] || null, low: +d[i].l[1] || null} : {err: "no Kraken ticker"}); }
       catch (e) { return insts.map(() => ({err: e.message})); }
     },
     async listings() {
@@ -1103,9 +1132,326 @@ function bindAlerts() {
   if (off) off.onclick = async () => { const r = swReg || await registerSW(); const s = r && await r.pushManager.getSubscription(); if (s) await s.unsubscribe(); localStorage.removeItem("okx_push_code"); pushCode = null; renderSet(); };
 }
 
+
+// ---------- Dashboard: price bands + per-coin pages + PAPER bot panel ----------
+// Hash routes: #/dash | #/dash/low|mid|high | #/coin/BTC  (own screen per coin, not a modal)
+const PRICE_BANDS = {
+  low:  { id: "low",  label: "Low-price",  cut: "< $1",        lo: 0,   hi: 1 },
+  mid:  { id: "mid",  label: "Mid-price",  cut: "$1 – $100",   lo: 1,   hi: 100 },
+  high: { id: "high", label: "High-price", cut: "> $100",      lo: 100, hi: Infinity },
+};
+const BAND_ORDER = ["low", "mid", "high"];
+function bandOf(price) {
+  if (price == null || !isFinite(price) || price <= 0) return null;
+  if (price < 1) return "low";
+  if (price <= 100) return "mid";
+  return "high";
+}
+const COIN_TFS = ["1m", "5m", "15m", "30m", "1H", "4H", "1D"];
+let dashBand = null;          // null = hub, else low|mid|high
+let coinPage = { coin: null, tf: "1H", chart: null, series: null, e20: null, e50: null };
+let paperBot = null;          // data/paper_bot.json
+const volFmt = v => {
+  if (v == null || !isFinite(v)) return "-";
+  if (v >= 1e9) return (v / 1e9).toFixed(2) + "B";
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + "M";
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + "K";
+  return v.toFixed(0);
+};
+function sparkSVG(closes, up) {
+  if (!closes || closes.length < 2) return `<svg viewBox="0 0 120 42" preserveAspectRatio="none"><text x="4" y="24" fill="currentColor" font-size="10" opacity=".5">…</text></svg>`;
+  const w = 120, h = 42, pad = 2;
+  let mn = Math.min(...closes), mx = Math.max(...closes); if (mx === mn) { mn -= 1; mx += 1; }
+  const pts = closes.map((c, i) => {
+    const x = pad + i * (w - 2 * pad) / (closes.length - 1);
+    const y = pad + (1 - (c - mn) / (mx - mn)) * (h - 2 * pad);
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+  const col = up ? "var(--grn)" : "var(--red)";
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/></svg>`;
+}
+function latestForCoin(coin) {
+  const day = (S.sigs || []).filter(s => s.pair === coin).sort((a, b) => b.t - a.t)[0];
+  if (day) return Object.assign({ kind: "day" }, day);
+  const sw = S.swing[coin] && S.swing[coin].sig;
+  if (sw) return Object.assign({ pair: coin, tf: "4H", kind: "swing" }, sw);
+  // box alerts for this coin
+  const a = ((S.feed && S.feed.alerts) || []).find(x => (x.pair === coin || x.pair === coin + "-USDT"));
+  if (a && a.status === "open") return { pair: coin, tf: a.tf, kind: a.market === "perp" ? "perp" : "day", entry: a.entry, sl: a.sl, tp: a.tp, t: (a.candle || a.ts) * (a.candle > 1e12 ? 1 : 1), age: null, rr: a.rr };
+  return null;
+}
+function coinCardHTML(coin) {
+  const t = S.tick[coin] || {}, b = S.bias[coin], h = S.h1[coin] || [];
+  const closes = h.slice(-48).map(k => k[4]);
+  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  const up = chg == null ? true : chg >= 0;
+  const sig = latestForCoin(coin);
+  const sigLine = sig
+    ? `<div class="xs" style="margin-top:.4rem"><span class="pill p-long">${sig.kind === "swing" ? "SWING" : sig.kind === "perp" ? "CONTRACT" : "LONG"} ${esc(sig.tf)}</span>
+        Entry <b>${px(sig.entry)}</b> · TP <b class="grn">${px(sig.tp)}</b> · SL <b class="red">${px(sig.sl)}</b></div>`
+    : `<div class="xs mut" style="margin-top:.4rem">No open signal</div>`;
+  return `<button class="dcard" data-coin="${esc(coin)}" type="button">
+    <div class="top"><div><div class="sym">${esc(coin)}</div>
+      <div class="px" style="font-size:1.15rem;font-weight:800;margin:.1rem 0">${t.err ? `<span class="red sm">no price</span>` : px(t.last)}</div>
+      <div class="xs ${up ? "grn" : "red"}">${chg == null ? "" : pct(chg) + " 24h"}</div></div>
+      <div class="spark">${sparkSVG(closes, up)}</div>
+      <div>${b ? biasPill(b.bias) : `<span class="pill p-neutral">…</span>`}</div></div>
+    <div class="meta"><div>24h vol (${X.quote})<b>${volFmt(t.vol)}</b></div><div>1H direction<b>${b ? esc(b.bias.toUpperCase()) : "-"}</b></div><div>Candles<b>${h.length || "…"}</b></div></div>
+    ${sigLine}</button>`;
+}
+async function loadPaperBot() {
+  try {
+    const r = await fetch(`data/paper_bot.json?ts=${Date.now()}`, { cache: "no-store" });
+    paperBot = r.ok ? await r.json() : null;
+  } catch (e) { paperBot = null; }
+}
+function paperPanelHTML() {
+  const pb = paperBot;
+  if (!pb) return `<div class="card paper-panel"><h2>PAPER grid + DCA bot <span class="badge b-paper">PAPER</span></h2><p class="sm mut">Paper snapshot not loaded yet.</p></div>`;
+  const running = pb.status === "running" && pb.paper;
+  let body = "";
+  if (running) {
+    const P = pb.paper;
+    body = `<p class="sm">Live PAPER state · balance <b>${money(P.balance_usd || P.equity_usd || 0)}</b>
+      · PnL <b class="${(P.pnl_usd || 0) >= 0 ? "grn" : "red"}">${amt(P.pnl_usd || 0, "USD")}</b></p>
+      <div class="scroll"><table class="tbl"><tr><th>Coin</th><th class="n">Position</th><th class="n">Avg</th><th class="n">PnL</th></tr>
+      ${(P.positions || []).map(x => `<tr><td><b>${esc(x.coin)}</b></td><td class="n">${x.size}</td><td class="n">${px(x.avg)}</td><td class="n ${x.pnl >= 0 ? "grn" : "red"}">${amt(x.pnl, "USD")}</td></tr>`).join("") || `<tr><td colspan="4" class="mut sm">No open positions</td></tr>`}</table></div>`;
+  } else {
+    const bt = pb.backtest || {};
+    const tot = bt.totals_fee_0_35 || {};
+    const hold = bt.hold_fee_0_35 || {};
+    body = `<div class="banner bn-amb" style="margin:.4rem 0 .7rem">PAPER — not started yet. Forward paper run on live prices needs Mike's ok. Nothing below places orders.</div>
+      <h3 style="margin:.2rem 0 .5rem">30-day backtest (step 1)</h3>
+      <p class="xs mut" style="margin:0 0 .5rem">${esc(bt.generated_at_ams || "")} · $${bt.capital_usd} across ${esc((bt.coins || []).join("/"))} · ${bt.days}d · 1H bars · fee 0.35% (EU example)</p>
+      <div class="statgrid">
+        <div>Bot ending<b class="${(tot.ending_value || 0) >= bt.capital_usd ? "grn" : "red"}">$${(tot.ending_value || 0).toFixed(2)}</b></div>
+        <div>Hold ending<b>$${(hold.ending_value || 0).toFixed(2)}</b></div>
+        <div>Grid profit<b class="grn">$${(tot.grid_profit || 0).toFixed(2)}</b></div>
+        <div>Max drawdown<b class="red">${(tot.portfolio_mdd_pct || 0).toFixed(1)}%</b></div>
+        <div>Fees paid<b>$${(tot.fees_paid || 0).toFixed(2)}</b></div>
+        <div>Fills<b>${tot.fills || 0}</b></div>
+        <div>DCA spent<b>$${(tot.dca_spend || 0).toFixed(0)}</b></div>
+        <div>vs hold<b class="${(tot.ending_value || 0) >= (hold.ending_value || 0) ? "grn" : "red"}">${pct(((tot.ending_value || 0) / (hold.ending_value || 1) - 1) * 100)}</b></div>
+      </div>
+      <div class="scroll" style="margin-top:.6rem"><table class="tbl"><tr><th>Coin</th><th class="n">End $</th><th class="n">Grid $</th><th class="n">Fees</th><th class="n">MDD</th></tr>
+      ${(bt.per_coin_fee_0_35 || []).map(r => `<tr><td><b>${esc(r.coin)}</b></td><td class="n">${r.ending_value.toFixed(2)}</td><td class="n">${r.grid_profit.toFixed(2)}</td><td class="n">${r.fees_paid.toFixed(2)}</td><td class="n red">${r.max_drawdown_pct.toFixed(1)}%</td></tr>`).join("")}</table></div>`;
+  }
+  return `<div class="card paper-panel" id="paperPanel"><div class="row"><h2 style="margin:0">PAPER grid + DCA bot</h2><span class="badge b-paper">PAPER · NO ORDERS</span></div>
+    <p class="xs mut" style="margin:.3rem 0 .5rem">${esc(pb.note || "PAPER only.")} Reads <code>data/paper_bot.json</code> (and a future <code>paper_state.json</code> from the box).</p>
+    ${body}</div>`;
+}
+function bandCoins(bandId) {
+  return listed().filter(c => {
+    const t = S.tick[c];
+    return t && !t.err && bandOf(t.last) === bandId;
+  });
+}
+function bindDashNav(el) {
+  el.querySelectorAll("[data-band]").forEach(b => b.onclick = () => navigate({ kind: "band", band: b.dataset.band }));
+  el.querySelectorAll("[data-coin]").forEach(b => b.onclick = () => navigate({ kind: "coin", coin: b.dataset.coin }));
+  el.querySelectorAll("[data-dashhome]").forEach(b => b.onclick = () => navigate({ kind: "dash" }));
+  bindTop(el);
+}
+function renderDash() {
+  const el = $("v-dash"); if (!el) return;
+  const top = `<div class="card" style="padding:.7rem 1rem"><div class="row"><span class="sm mut">Exchange</span>${exChips()}<span class="sp"></span>
+    <span class="xs mut">Cutoffs: Low &lt; $1 · Mid $1–$100 · High &gt; $100</span></div>${hiddenNote()}</div>`;
+  if (S.err.day && !Object.keys(S.tick).length) { el.innerHTML = top + errBanner("day") + paperPanelHTML(); bindDashNav(el); return; }
+  if (!Object.keys(S.tick).length) { el.innerHTML = top + `<div class="card"><p class="sm mut" style="margin:0">Loading live ${X.label} prices for the dashboard…</p></div>` + paperPanelHTML(); bindDashNav(el); return; }
+
+  if (dashBand && PRICE_BANDS[dashBand]) {
+    const B = PRICE_BANDS[dashBand], coins = bandCoins(dashBand);
+    const unk = listed().filter(c => { const t = S.tick[c]; return !t || t.err || bandOf(t.last) == null; });
+    el.innerHTML = top + errBanner("day") + `
+      <div class="card"><div class="row"><button class="coin-head back" data-dashhome type="button">← Dash</button>
+        <h2 style="margin:0">${esc(B.label)} coins</h2><span class="sp"></span><span class="pill p-amb">${esc(B.cut)}</span></div>
+        <p class="sm mut" style="margin:.4rem 0 .7rem">Coins on your watchlist with a live ${X.label} price in this band. Tap a coin for its own chart page.</p>
+        <div class="dcards">${coins.length ? coins.map(coinCardHTML).join("") : `<p class="sm mut">No watchlist coin is in this band right now.</p>`}</div>
+        ${unk.length ? `<p class="xs amb" style="margin-top:.6rem">No price yet: ${esc(unk.join(", "))}</p>` : ""}
+        ${srcLine("sparkline = last 48 closed 1H candles")}
+      </div>`;
+    bindDashNav(el); return;
+  }
+
+  // Hub: three group screens + all-coin strip + paper panel
+  const counts = Object.fromEntries(BAND_ORDER.map(id => [id, bandCoins(id).length]));
+  const heroes = BAND_ORDER.map(id => {
+    const B = PRICE_BANDS[id];
+    return `<button class="band-tile" data-band="${id}" type="button"><h3>${esc(B.label)}</h3><div class="cut">${esc(B.cut)}</div><div class="n">${counts[id]}</div><div class="xs mut">coin${counts[id] === 1 ? "" : "s"} · open group</div></button>`;
+  }).join("");
+  const all = listed().slice().sort((a, b) => (S.tick[b]?.last || 0) - (S.tick[a]?.last || 0));
+  el.innerHTML = top + errBanner("day") + `
+    <div class="card"><h2>Coin dashboard</h2>
+      <p class="sm mut" style="margin:.2rem 0 .7rem">Watchlist coins grouped by live price. Each group is its own screen; each coin has its own chart page (<code>#/coin/BTC</code>).</p>
+      <div class="band-hero">${heroes}</div></div>
+    ${paperPanelHTML()}
+    <div class="card"><h2>All tracked coins</h2>
+      <div class="dcards">${all.map(coinCardHTML).join("") || `<p class="sm mut">No coins listed on ${X.label}.</p>`}</div>
+      ${srcLine("sparkline = last 48 closed 1H candles · vol = 24h quote volume")}
+    </div>`;
+  bindDashNav(el);
+}
+
+function destroyCoinChart() {
+  try { if (coinPage.chart) coinPage.chart.remove(); } catch (e) {}
+  coinPage.chart = coinPage.series = coinPage.e20 = coinPage.e50 = null;
+}
+function buildCoinChart(candles) {
+  destroyCoinChart();
+  const el = $("coinChart"); if (!el || !window.LightweightCharts) return;
+  const dark = document.documentElement.dataset.theme !== "light";
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth, height: el.clientHeight || 320,
+    layout: { background: { color: "transparent" }, textColor: dark ? "#8a94a3" : "#5d6775" },
+    grid: { vertLines: { color: dark ? "#1a2029" : "#e8edf3" }, horzLines: { color: dark ? "#1a2029" : "#e8edf3" } },
+    rightPriceScale: { borderVisible: false },
+    timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
+    crosshair: { mode: 0 },
+  });
+  const series = chart.addCandlestickSeries({
+    upColor: "#2fd27a", downColor: "#ff5468", borderUpColor: "#2fd27a", borderDownColor: "#ff5468",
+    wickUpColor: "#2fd27a", wickDownColor: "#ff5468",
+  });
+  const e20s = chart.addLineSeries({ color: "#5aa9ff", lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+  const e50s = chart.addLineSeries({ color: "#ffb648", lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+  const ind = indicators(candles);
+  const bars = candles.map(k => ({ time: Math.floor(k[0] / 1000), open: k[1], high: k[2], low: k[3], close: k[4] }));
+  const l20 = candles.map((k, i) => ind.e20[i] != null ? { time: Math.floor(k[0] / 1000), value: ind.e20[i] } : null).filter(Boolean);
+  const l50 = candles.map((k, i) => ind.e50[i] != null ? { time: Math.floor(k[0] / 1000), value: ind.e50[i] } : null).filter(Boolean);
+  series.setData(bars); e20s.setData(l20); e50s.setData(l50);
+  chart.timeScale().fitContent();
+  coinPage.chart = chart; coinPage.series = series; coinPage.e20 = e20s; coinPage.e50 = e50s;
+  if (coinPage._ro) coinPage._ro.disconnect();
+  coinPage._ro = new ResizeObserver(() => { try { chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 320 }); } catch (e) {} });
+  coinPage._ro.observe(el);
+}
+async function loadCoinPage() {
+  const coin = coinPage.coin; if (!coin) return;
+  const inst = X.spotId(coin);
+  if (!inst) { S.err.coin = `${X.label} has no ${coin}/${X.quote} spot pair.`; return renderCoin(); }
+  try {
+    const [tick] = await X.tickers([inst]);
+    S.tick[coin] = tick;
+    const c = await X.candles(inst, coinPage.tf);
+    coinPage.candles = c;
+    if (!S.h1[coin] || coinPage.tf === "1H") { if (coinPage.tf === "1H") S.h1[coin] = c; }
+    if (!S.bias[coin]) {
+      const h = coinPage.tf === "1H" ? c : await X.candles(inst, "1H");
+      S.h1[coin] = h; S.bias[coin] = biasDetail(h, "1H");
+    }
+    // recent signals across day TFs (lightweight: only if we already have bias)
+    const gate = gateFn(S.h1[coin], "1H");
+    const sigs = [];
+    for (const tf of ["5m", "15m", "30m", "1H"]) {
+      try {
+        const cc = tf === coinPage.tf ? c : await X.candles(inst, tf);
+        const s = latestSignal(cc, tf, gate, DAY);
+        if (s) sigs.push(Object.assign({ pair: coin, tf, kind: "day" }, s));
+      } catch (e) {}
+    }
+    coinPage.sigs = sigs;
+    S.err.coin = null;
+  } catch (e) { S.err.coin = e.message; }
+}
+function renderCoin() {
+  const el = $("v-coin"); if (!el) return;
+  const coin = coinPage.coin;
+  if (!coin) { el.innerHTML = `<div class="card"><p class="sm mut">No coin selected.</p><button class="btn ghost" data-dashhome>Back to Dash</button></div>`; bindDashNav(el); return; }
+  const t = S.tick[coin] || {}, b = S.bias[coin], band = bandOf(t.last);
+  const B = band ? PRICE_BANDS[band] : null;
+  const chg = t.last && t.open ? (t.last / t.open - 1) * 100 : null;
+  const tfs = COIN_TFS.map(tf => `<button class="chip ${tf === coinPage.tf ? "on" : ""}" data-ctf="${tf}">${tf === "1H" ? "1h" : tf === "4H" ? "4h" : tf === "1D" ? "1D" : tf}</button>`).join("");
+  const sigs = (coinPage.sigs || []).map(s => sigCard(s)).join("") || `<p class="sm mut">No fresh day signal on 5m/15m/30m/1H right now.</p>`;
+  el.innerHTML = `
+    <div class="card"><div class="coin-head">
+      <button class="back" data-dashhome type="button">← Dash</button>
+      ${B ? `<button class="back" data-band="${B.id}" type="button">${esc(B.label)}</button>` : ""}
+      <h2 style="margin:0">${esc(coin)}/${X.quote}</h2>
+      <span class="badge b-paper">LIVE · ${esc(X.label)}</span>
+      <span class="sp"></span>${b ? biasPill(b.bias) : ""}
+    </div>
+    <div class="row" style="margin:.3rem 0 .5rem"><span class="px" style="font-size:1.5rem;font-weight:800">${t.err ? "—" : px(t.last)}</span>
+      <span class="sm ${chg >= 0 ? "grn" : "red"}">${chg == null ? "" : pct(chg) + " 24h"}</span>
+      <span class="xs mut">Vol ${volFmt(t.vol)} ${X.quote}${t.high ? ` · H ${px(t.high)} L ${px(t.low)}` : ""}</span></div>
+    <div class="tfbar">${tfs}<span class="xs mut" style="align-self:center;margin-left:.3rem">EMA20 blue · EMA50 amber</span></div>
+    ${S.err.coin ? `<div class="banner bn-red">${esc(S.err.coin)}</div>` : ""}
+    <div id="coinChart"></div>
+    <p class="xs mut" style="margin:.4rem 0 0">${srcLine("own page · closed candles only").replace(/^<p[^>]*>/, "").replace(/<\/p>$/, "")}</p>
+    </div>
+    <div class="card"><h2>Key stats · 1H direction</h2>
+      <div class="statgrid">
+        <div>1H bias<b>${b ? esc(b.bias.toUpperCase()) : "-"}</b></div>
+        <div>RSI(14)<b>${b && b.rsi != null ? b.rsi.toFixed(1) : "-"}</b></div>
+        <div>EMA20<b>${b && b.e20 != null ? px(b.e20) : "-"}</b></div>
+        <div>EMA50<b>${b && b.e50 != null ? px(b.e50) : "-"}</b></div>
+      </div>
+      <p class="xs mut" style="margin:.5rem 0 0">${esc(biasWhy(b))}. Direction rule: price &gt; EMA50, EMA20 &gt; EMA50, EMA50 rising, RSI ≥ 50 → LONG.</p>
+    </div>
+    <div class="card"><h2>Recent signals</h2>${sigs}</div>`;
+  bindDashNav(el);
+  el.querySelectorAll("[data-ctf]").forEach(b => b.onclick = () => {
+    coinPage.tf = b.dataset.ctf;
+    loadCoinPage().then(() => { renderCoin(); if (coinPage.candles) buildCoinChart(coinPage.candles); });
+  });
+  if (coinPage.candles && coinPage.candles.length) setTimeout(() => buildCoinChart(coinPage.candles), 30);
+}
+
+function parseRoute() {
+  const h = location.hash || "";
+  let m = /^#\/coin\/([A-Za-z0-9]{2,12})(?:-USDT)?\/?$/i.exec(h);
+  if (m) { const c = normCoin(m[1]); return c ? { kind: "coin", coin: c } : null; }
+  m = /^#\/dash\/(low|mid|high)\/?$/i.exec(h);
+  if (m) return { kind: "band", band: m[1].toLowerCase() };
+  if (/^#\/dash\/?$/i.test(h)) return { kind: "dash" };
+  return null;
+}
+function navigate(r, replace) {
+  let hash = "#/dash";
+  if (r.kind === "coin") hash = "#/coin/" + r.coin;
+  else if (r.kind === "band") hash = "#/dash/" + r.band;
+  else if (r.kind === "dash") hash = "#/dash";
+  if (replace) history.replaceState(null, "", location.pathname + location.search + hash);
+  else if (location.hash !== hash) location.hash = hash;
+  else applyRoute();
+}
+function applyRoute() {
+  const r = parseRoute();
+  if (!r) return false;
+  if (r.kind === "coin") {
+    dashBand = null; coinPage.coin = r.coin; coinPage.tf = coinPage.tf || "1H";
+    view = "coin"; lsSet("okx_view", "dash");
+    document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-coin"));
+    document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === "dash"));
+    renderCoin();
+    loadCoinPage().then(() => { renderCoin(); if (coinPage.candles) buildCoinChart(coinPage.candles); });
+    return true;
+  }
+  destroyCoinChart(); coinPage.coin = null;
+  dashBand = r.kind === "band" ? r.band : null;
+  view = "dash"; lsSet("okx_view", "dash");
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-dash"));
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === "dash"));
+  RENDER.dash(); refresh(true);
+  return true;
+}
+window.addEventListener("hashchange", () => {
+  if (!started) return;
+  if (parseRoute()) applyRoute();
+  else if (view === "coin" || view === "dash") { /* keep */ }
+});
+
 // ---------- shell ----------
-const RENDER = {day: renderDay, an: renderAnalyze, log: renderLog, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
-function show(v) { view = v; lsSet("okx_view", v); document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v)); document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); RENDER[v](); refresh(true); }
+const RENDER = {dash: renderDash, coin: renderCoin, day: renderDay, an: renderAnalyze, log: renderLog, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
+function show(v) {
+  if (v === "dash") { navigate({ kind: dashBand ? "band" : "dash", band: dashBand || undefined }); return; }
+  if (v === "coin") { if (coinPage.coin) navigate({ kind: "coin", coin: coinPage.coin }); else navigate({ kind: "dash" }); return; }
+  destroyCoinChart(); coinPage.coin = null; dashBand = null;
+  if (/^#\/(dash|coin)\//.test(location.hash) || location.hash === "#/dash") history.replaceState(null, "", location.pathname + location.search);
+  view = v; lsSet("okx_view", v);
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  RENDER[v](); refresh(true);
+}
 let busy = false, again = false;
 async function refresh(force) {
   if (busy) { if (force) again = true; return; }
@@ -1114,18 +1460,30 @@ async function refresh(force) {
   try {
     const all = [];
     if (v === "an" || v === "log") { if (!S.feed) await loadFeed(); return; }
-    const ex0 = exName;
-    try { await loadDay(); S.err.day = null; all.push(...S.sigs); } catch (e) { S.err.day = e.message; }
-    if (v === "swing" || Date.now() - S.swAt > 600000) { try { await loadSwing(); S.err.swing = null; } catch (e) { S.err.swing = e.message; } }
-    listed().forEach(p => S.swing[p] && S.swing[p].sig && all.push(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
-    if (v === "perp") { try { if (!X.perpInBrowser && !S.feed) await loadFeed(); all.push(...await loadPerp()); S.err.perp = null; } catch (e) { S.err.perp = e.message; } }
-    if (v === "port") { try { await loadPort(); S.err.port = null; } catch (e) { S.err.port = e.message; } }
-    if (!S.feed || Date.now() - S.at > 300000) await loadFeed();
-    if (ex0 !== exName) return;                     // switched exchange mid-load: the new load takes over
-    announce(all); firstPass = false; S.at = Date.now();
+    if (v === "coin") {
+      try { await loadCoinPage(); } catch (e) { S.err.coin = e.message; }
+      S.at = Date.now();
+    } else {
+      const ex0 = exName;
+      try { await loadDay(); S.err.day = null; all.push(...S.sigs); } catch (e) { S.err.day = e.message; }
+      if (v === "dash") {
+        if (!paperBot) await loadPaperBot();
+      }
+      if (v === "swing" || Date.now() - S.swAt > 600000) { try { await loadSwing(); S.err.swing = null; } catch (e) { S.err.swing = e.message; } }
+      listed().forEach(p => S.swing[p] && S.swing[p].sig && all.push(Object.assign({pair: p, tf: "4H", kind: "swing"}, S.swing[p].sig)));
+      if (v === "perp") { try { if (!X.perpInBrowser && !S.feed) await loadFeed(); all.push(...await loadPerp()); S.err.perp = null; } catch (e) { S.err.perp = e.message; } }
+      if (v === "port") { try { await loadPort(); S.err.port = null; } catch (e) { S.err.port = e.message; } }
+      if (!S.feed || Date.now() - S.at > 300000) await loadFeed();
+      if (ex0 !== exName) return;                     // switched exchange mid-load: the new load takes over
+      announce(all); firstPass = false; S.at = Date.now();
+    }
   } finally { busy = false; if (again) { again = false; setTimeout(() => refresh(true), 0); } }
-  $("upd").textContent = (view === "an" || view === "log") ? (view === "log" ? "Logbook · " : "Analyze · ") + tm(Date.now()) : S.err.day ? "data error" : "Live · " + tm(Date.now());
-  if (view === v) RENDER[v]();
+  $("upd").textContent = (view === "an" || view === "log") ? (view === "log" ? "Logbook · " : "Analyze · ") + tm(Date.now())
+    : view === "coin" ? (coinPage.coin || "Coin") + " · " + tm(Date.now())
+    : view === "dash" ? "Dash · " + tm(Date.now())
+    : S.err.day ? "data error" : "Live · " + tm(Date.now());
+  if (view === v && RENDER[v]) RENDER[v]();
+  if (view === "coin" && v === "coin" && coinPage.candles) setTimeout(() => buildCoinChart(coinPage.candles), 30);
 }
 const THEMES = ["auto", "dark", "light"];
 function applyTheme() { const p = localStorage.getItem("okx_theme") || "auto", h = +new Intl.DateTimeFormat("en-GB", {hour: "2-digit", hourCycle: "h23", timeZone: "Europe/Amsterdam"}).format(new Date());
@@ -1142,7 +1500,10 @@ async function start() {
   if (!X.spotId(sel)) sel = listed()[0] || sel;
   $("tabs").style.display = ""; $("app").style.display = "";
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.v));
-  registerSW(); show(RENDER[view] ? view : "day");
+  registerSW();
+  await loadPaperBot();
+  if (parseRoute()) applyRoute();
+  else show(RENDER[view] ? view : "day");
   setInterval(() => refresh(false), 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - S.at > 55000) refresh(false); });
 }

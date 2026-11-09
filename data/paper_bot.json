@@ -1,0 +1,85 @@
+{
+  "v": 1,
+  "label": "PAPER",
+  "status": "not_started",
+  "note": "PAPER only. No real orders. Forward paper run has not been started yet.",
+  "paper_state_path": "hybrid_bot/paper_state.json",
+  "backtest": {
+    "label": "30-day backtest (step 1)",
+    "generated_at_ams": "2026-11-09T16:42:41.500663+01:00",
+    "capital_usd": 1000.0,
+    "per_coin_usd": 333.3333333333333,
+    "days": 30,
+    "bar": "1H",
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL"
+    ],
+    "fee_pct_eu": 0.35,
+    "fee_pct_regular": 0.1,
+    "totals_fee_0_35": {
+      "ending_value": 923.2996,
+      "grid_profit": 15.4101,
+      "dca_spend": 300.0,
+      "fees_paid": 10.9203,
+      "fills": 148,
+      "portfolio_mdd_pct": 9.4508,
+      "max_coin_mdd_pct": 11.2355
+    },
+    "totals_fee_0_1": {
+      "ending_value": 931.0998,
+      "grid_profit": 15.4101,
+      "dca_spend": 300.0,
+      "fees_paid": 3.1201,
+      "fills": 148,
+      "portfolio_mdd_pct": 9.165,
+      "max_coin_mdd_pct": 11.0088
+    },
+    "per_coin_fee_0_35": [
+      {
+        "coin": "BTC",
+        "ending_value": 315.0742,
+        "grid_profit": 5.0625,
+        "dca_spend": 100.0,
+        "fees_paid": 4.2517,
+        "fills": 58,
+        "max_drawdown_pct": 7.545,
+        "start_price": 83057.6,
+        "end_price": 74896.3
+      },
+      {
+        "coin": "ETH",
+        "ending_value": 307.9503,
+        "grid_profit": 5.7382,
+        "dca_spend": 100.0,
+        "fees_paid": 3.749,
+        "fills": 50,
+        "max_drawdown_pct": 9.6772,
+        "start_price": 2511.87,
+        "end_price": 2129.28
+      },
+      {
+        "coin": "SOL",
+        "ending_value": 300.2751,
+        "grid_profit": 4.6094,
+        "dca_spend": 100.0,
+        "fees_paid": 2.9196,
+        "fills": 40,
+        "max_drawdown_pct": 11.2355,
+        "start_price": 110.49,
+        "end_price": 87.32
+      }
+    ],
+    "hold_fee_0_35": {
+      "ending_value": 840.6591,
+      "grid_profit": 0.0,
+      "dca_spend": 996.5,
+      "fees_paid": 6.4526,
+      "fills": 6,
+      "portfolio_mdd_pct": 18.3658,
+      "max_coin_mdd_pct": 24.4103
+    }
+  },
+  "paper": null
+}
