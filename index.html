@@ -188,6 +188,7 @@ html[data-theme="light"] .paper-panel{background:#fff8e8;border-color:#f0cf8a}
   <button data-v="perp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V3M5 10l7-7 7 7"/></svg>Contracts</button>
   <button data-v="port"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Portfolio</button>
   <button data-v="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Log</button>
+  <button data-v="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>Alerts</button>
   <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
 </nav>
 <main id="app" style="display:none">
@@ -197,6 +198,7 @@ html[data-theme="light"] .paper-panel{background:#fff8e8;border-color:#f0cf8a}
   <section class="view" id="v-an"></section>
   <section class="view" id="v-swing"></section>
   <section class="view" id="v-log"></section>
+  <section class="view" id="v-alerts"></section>
   <section class="view" id="v-perp"></section>
   <section class="view" id="v-port"></section>
   <section class="view" id="v-set"></section>
@@ -325,7 +327,7 @@ function toast(m) { const t = $("toast"); t.textContent = m; t.style.display = "
 const b64uEnc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const b64uDec = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 const DAY_TFS = ["1m", "2m", "5m", "10m", "15m", "20m", "30m"];
-const DEF_WATCH = ["BTC", "ETH", "SOL", "XRP", "LINK"]; // established majors only; memes → FOMO desk
+const DEF_WATCH = ["BTC", "ETH", "SOL", "XRP", "LINK", "BNB", "ADA", "AVAX", "DOT", "LTC", "BCH", "TRX"]; // established majors; memes → FOMO
 const MEME_COINS = new Set(["DOGE","SHIB","PEPE","FLOKI","BONK","WIF","MEME","ELON","TRUMP","BRETT","NEIRO","PNUT","GOAT","MOG","POPCAT","MEW","SPX","TURBO","MYRO","BOME"]);
 const MAX_LEV = 3;
 const biasPill = b => b === "long" ? `<span class="pill p-long">LONG</span>` : b === "short" ? `<span class="pill p-short">SHORT · AVOID</span>` : `<span class="pill p-neutral">NEUTRAL</span>`;
@@ -641,7 +643,10 @@ let X = EX[exName];
 // ---------- state ----------
 const normCoin = p => { const m = /^([A-Z0-9]{2,12})(-USDT)?$/.exec(String(p || "").trim().toUpperCase()); return m ? ({XBT: "BTC", XDG: "DOGE"})[m[1]] || m[1] : null; };
 let watch = [...new Set(ls("okx_watch", DEF_WATCH).map(normCoin).filter(Boolean))]; if (!watch.length) watch = DEF_WATCH.slice();
-watch = watch.filter(c => !MEME_COINS.has(c)); if (!watch.length) watch = DEF_WATCH.slice(); lsSet("okx_watch", watch);
+watch = watch.filter(c => !MEME_COINS.has(c));
+// Pull in new established defaults the device doesn't have yet (never re-add memes)
+for (const c of DEF_WATCH) if (!watch.includes(c) && !MEME_COINS.has(c) && watch.length < 12) watch.push(c);
+if (!watch.length) watch = DEF_WATCH.slice(); lsSet("okx_watch", watch);
 let pushTfs = ls("okx_push_tfs", ["5m", "10m", "15m", "20m", "30m"]);
 let pushSwing = ls("okx_push_swing", true), pushPerp = ls("okx_push_perp", true);
 let inAppTfs = ls("okx_inapp_tfs", ["5m", "10m", "15m", "20m", "30m"]), sound = ls("okx_sound", true);
@@ -1908,7 +1913,144 @@ window.addEventListener("hashchange", () => {
 });
 
 // ---------- shell ----------
-const RENDER = {dash: renderDash, coin: renderCoin, day: renderDay, an: renderAnalyze, log: renderLog, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
+
+// ---------- Numbered Alerts logbook (permanent #1 = oldest) ----------
+let alertsFeed = null;
+let alertsMode = ls("okx_alerts_mode", "24h"); // 24h | search
+let alertsQ = ls("okx_alerts_q", { num: "", pair: "", date: "", time: "", from: "", to: "" });
+async function loadAlertsFeed() {
+  try {
+    const r = await fetch(`data/alerts.json?ts=${Date.now()}`, { cache: "no-store" });
+    alertsFeed = r.ok ? await r.json() : null;
+  } catch (e) { alertsFeed = null; }
+}
+function fwdCell(v) {
+  if (v == null || !isFinite(v)) return `<span class="mut">n/a</span>`;
+  return `<span class="${v >= 0 ? "grn" : "red"}">${pct(v, 2)}</span>`;
+}
+function hitCell(h) {
+  if (h === "SL") return `<span class="red">SL first</span>`;
+  if (h === "TP") return `<span class="grn">TP first</span>`;
+  if (h === "time") return `<span class="amb">time</span>`;
+  if (h === "open") return `<span class="mut">open</span>`;
+  return `<span class="mut">n/a</span>`;
+}
+function alertRowHTML(a) {
+  const gone = a.removed_from_watchlist ? ` <span class="pill p-amb">REMOVED</span>` : "";
+  return `<div class="sig" data-ano="${a.alert_no}">
+    <div class="row"><b class="mono">${esc(a.label || ("#" + a.alert_no))}</b>
+      <span class="sm">${esc(a.pair)}${gone}</span><span class="sm mut">${esc(a.tf)} · ${esc(a.market || "spot")}</span>
+      ${a.regime ? regimePill(a.regime) : ""}<span class="sp"></span>${hitCell(a.hit_first)}</div>
+    <div class="lv">
+      <div>Entry<b>${px(a.entry)}</b></div>
+      <div>TP<b class="grn">${px(a.tp)}</b></div>
+      <div>SL<b class="red">${px(a.sl)}</b></div>
+      <div>Net<b class="${a.net == null ? "" : a.net >= 0 ? "grn" : "red"}">${a.status === "open" ? "open" : (a.net == null ? "n/a" : pct(a.net, 2))}</b></div>
+    </div>
+    <div class="scroll" style="margin-top:.35rem"><table class="tt"><tr><th>+15m</th><th>+1h</th><th>+4h</th><th>+24h</th></tr>
+      <tr><td class="n">${fwdCell(a.fwd && a.fwd.m15)}</td><td class="n">${fwdCell(a.fwd && a.fwd.h1)}</td>
+        <td class="n">${fwdCell(a.fwd && a.fwd.h4)}</td><td class="n">${fwdCell(a.fwd && a.fwd.d1)}</td></tr></table></div>
+  </div>`;
+}
+function parseAmsRange(dateStr, timeStr) {
+  // date YYYY-MM-DD, time HH:MM → ms in Amsterdam (approx via amsToMs)
+  if (!dateStr) return null;
+  const t = timeStr && /^\d{1,2}:\d{2}$/.test(timeStr) ? timeStr : "00:00";
+  return amsToMs(dateStr + " " + t);
+}
+function filterAlerts(rows) {
+  const q = alertsQ || {};
+  let out = rows.slice();
+  if (q.num) {
+    const n = String(q.num).replace(/^#/, "").trim();
+    if (n) out = out.filter(a => String(a.alert_no) === n || String(a.alert_no).includes(n));
+  }
+  if (q.pair) {
+    const p = String(q.pair).trim().toUpperCase();
+    out = out.filter(a => a.pair && a.pair.toUpperCase().includes(p));
+  }
+  // single date (calendar day Amsterdam)
+  if (q.date && !q.from && !q.to) {
+    const start = parseAmsRange(q.date, "00:00");
+    const end = parseAmsRange(q.date, "23:59");
+    if (start && end) out = out.filter(a => a.ts * 1000 >= start && a.ts * 1000 <= end + 59999);
+  }
+  // time-of-day filter on whatever set remains (HH:MM match prefix) — combinable
+  if (q.time) {
+    const want = String(q.time).trim();
+    out = out.filter(a => (a.ts_ams || "").startsWith(want) || (a.label || "").includes(want));
+  }
+  // explicit range (from/to as YYYY-MM-DD or YYYY-MM-DD HH:MM)
+  if (q.from || q.to) {
+    const f = q.from ? (q.from.includes(" ") ? amsToMs(q.from) : parseAmsRange(q.from, "00:00")) : null;
+    const t0 = q.to ? (q.to.includes(" ") ? amsToMs(q.to) : parseAmsRange(q.to, "23:59")) : null;
+    out = out.filter(a => {
+      const ms = a.ts * 1000;
+      if (f && ms < f) return false;
+      if (t0 && ms > t0 + (String(q.to).includes(":") ? 0 : 59999)) return false;
+      return true;
+    });
+  }
+  return out;
+}
+function renderAlerts() {
+  const el = $("v-alerts"); if (!el) return;
+  const f = alertsFeed;
+  const modes = [["24h", "Last 24h"], ["search", "Search logbook"]].map(([k, lab]) =>
+    `<button class="chip ${alertsMode === k ? "on" : ""}" data-amode="${k}">${lab}</button>`).join("");
+  let body = "";
+  if (!f) {
+    body = `<div class="tpanel"><p class="mono mut">Loading numbered alerts…</p></div>`;
+  } else if (alertsMode === "24h") {
+    const rows = f.last_24h || [];
+    body = `<div class="tpanel"><h3>Last 24h · newest first</h3>
+      <p class="mono mut" style="margin:0 0 .5rem">Permanent numbers never renumber. #${f.number_range && f.number_range.first} = oldest ever · #${f.number_range && f.number_range.last} = latest. Total ${f.total}.</p>
+      ${rows.length ? rows.map(alertRowHTML).join("") : `<p class="mono mut">No PAPER alerts in the last 24 hours. Use Search logbook for older numbers.</p>`}
+    </div>`;
+  } else {
+    const q = alertsQ;
+    const rows = filterAlerts(f.all || []);
+    body = `<div class="tpanel"><h3>Search alert logbook</h3>
+      <p class="mono mut" style="margin:0 0 .5rem">Combine filters freely. Forward % = real OKX price vs entry at +15m / +1h / +4h / +24h. Hit = which of TP/SL the paper tracker saw first.</p>
+      <div class="lgrid">
+        <label>Number<input class="f" id="aqNum" placeholder="#57" value="${esc(q.num || "")}"></label>
+        <label>Coin<input class="f" id="aqPair" placeholder="ETH" value="${esc(q.pair || "")}" autocapitalize="characters"></label>
+        <label>Date<input class="f" id="aqDate" placeholder="2026-11-05" value="${esc(q.date || "")}"></label>
+        <label>Time (AMS)<input class="f" id="aqTime" placeholder="11:45" value="${esc(q.time || "")}"></label>
+        <label>From<input class="f" id="aqFrom" placeholder="2026-11-02 or 2026-11-02 13:00" value="${esc(q.from || "")}"></label>
+        <label>To<input class="f" id="aqTo" placeholder="2026-11-05 23:59" value="${esc(q.to || "")}"></label>
+      </div>
+      <div class="row" style="margin:.5rem 0"><button class="btn" id="aqGo">Search</button>
+        <button class="btn ghost" id="aqClear">Clear</button>
+        <span class="mono mut">${rows.length} result${rows.length === 1 ? "" : "s"}</span></div>
+      ${rows.length ? rows.map(alertRowHTML).join("") : `<p class="mono mut">No alerts match these filters.</p>`}
+    </div>`;
+  }
+  el.innerHTML = `<div class="term">
+    <div class="card" style="padding:.7rem 1rem;margin-bottom:.6rem">
+      <div class="row"><h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">Alerts</h2>
+        <span class="badge b-paper">PAPER · #${f && f.number_range ? f.number_range.first : "?"}–#${f && f.number_range ? f.number_range.last : "?"}</span>
+        <span class="sp"></span>
+        <button class="chip ${alertsMode === "24h" ? "on" : ""}" data-amode="24h">24h</button></div>
+      <div class="chips" style="margin-top:.45rem">${modes}</div>
+    </div>
+    ${body}
+    <p class="mono mut" style="margin:.5rem 0 0">Prices from OKX public market data. Numbers are permanent. Amsterdam time.</p>
+  </div>`;
+  el.querySelectorAll("[data-amode]").forEach(b => b.onclick = () => { alertsMode = b.dataset.amode; lsSet("okx_alerts_mode", alertsMode); renderAlerts(); });
+  if (alertsMode === "search") {
+    const save = () => {
+      alertsQ = { num: $("aqNum").value, pair: $("aqPair").value, date: $("aqDate").value,
+        time: $("aqTime").value, from: $("aqFrom").value, to: $("aqTo").value };
+      lsSet("okx_alerts_q", alertsQ); renderAlerts();
+    };
+    $("aqGo").onclick = save;
+    $("aqClear").onclick = () => { alertsQ = { num: "", pair: "", date: "", time: "", from: "", to: "" }; lsSet("okx_alerts_q", alertsQ); renderAlerts(); };
+    ["aqNum","aqPair","aqDate","aqTime","aqFrom","aqTo"].forEach(id => { const n=$(id); if (n) n.onkeydown = e => { if (e.key === "Enter") save(); }; });
+  }
+}
+
+const RENDER = {dash: renderDash, coin: renderCoin, day: renderDay, an: renderAnalyze, log: renderLog, alerts: renderAlerts, swing: renderSwing, perp: renderPerp, port: renderPort, set: renderSet};
 function show(v) {
   if (v === "dash") { navigate({ kind: dashBand ? "band" : "dash", band: dashBand || undefined }); return; }
   if (v === "coin") { if (coinPage.coin) navigate({ kind: "coin", coin: coinPage.coin }); else navigate({ kind: "dash" }); return; }
@@ -1932,6 +2074,9 @@ async function refresh(force) {
       await loadRegimeFeed();
       await backfillMineRegimes();
       S.at = Date.now();
+    } else if (v === "alerts") {
+      await loadAlertsFeed();
+      S.at = Date.now();
     } else if (v === "coin") {
       try { await loadCoinPage(); } catch (e) { S.err.coin = e.message; }
       S.at = Date.now();
@@ -1951,6 +2096,7 @@ async function refresh(force) {
     }
   } finally { busy = false; if (again) { again = false; setTimeout(() => refresh(true), 0); } }
   $("upd").textContent = (view === "an" || view === "log") ? (view === "log" ? "Logbook · " : "Analyze · ") + tm(Date.now())
+    : view === "alerts" ? "Alerts · " + tm(Date.now())
     : view === "coin" ? (coinPage.coin || "Coin") + " · " + tm(Date.now())
     : view === "dash" ? "Dash · " + tm(Date.now())
     : S.err.day ? "data error" : "Live · " + tm(Date.now());
@@ -1975,6 +2121,7 @@ async function start() {
   registerSW();
   await loadPaperBot();
   await loadRegimeFeed();
+  await loadAlertsFeed();
   if (parseRoute()) applyRoute();
   else show(RENDER[view] ? view : "day");
   setInterval(() => refresh(false), 60000);
