@@ -325,7 +325,8 @@ function toast(m) { const t = $("toast"); t.textContent = m; t.style.display = "
 const b64uEnc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const b64uDec = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 const DAY_TFS = ["1m", "2m", "5m", "10m", "15m", "20m", "30m"];
-const DEF_WATCH = ["BTC", "ETH", "SOL", "XRP", "DOGE", "LINK"];
+const DEF_WATCH = ["BTC", "ETH", "SOL", "XRP", "LINK"]; // established majors only; memes → FOMO desk
+const MEME_COINS = new Set(["DOGE","SHIB","PEPE","FLOKI","BONK","WIF","MEME","ELON","TRUMP","BRETT","NEIRO","PNUT","GOAT","MOG","POPCAT","MEW","SPX","TURBO","MYRO","BOME"]);
 const MAX_LEV = 3;
 const biasPill = b => b === "long" ? `<span class="pill p-long">LONG</span>` : b === "short" ? `<span class="pill p-short">SHORT · AVOID</span>` : `<span class="pill p-neutral">NEUTRAL</span>`;
 
@@ -640,6 +641,7 @@ let X = EX[exName];
 // ---------- state ----------
 const normCoin = p => { const m = /^([A-Z0-9]{2,12})(-USDT)?$/.exec(String(p || "").trim().toUpperCase()); return m ? ({XBT: "BTC", XDG: "DOGE"})[m[1]] || m[1] : null; };
 let watch = [...new Set(ls("okx_watch", DEF_WATCH).map(normCoin).filter(Boolean))]; if (!watch.length) watch = DEF_WATCH.slice();
+watch = watch.filter(c => !MEME_COINS.has(c)); if (!watch.length) watch = DEF_WATCH.slice(); lsSet("okx_watch", watch);
 let pushTfs = ls("okx_push_tfs", ["5m", "10m", "15m", "20m", "30m"]);
 let pushSwing = ls("okx_push_swing", true), pushPerp = ls("okx_push_perp", true);
 let inAppTfs = ls("okx_inapp_tfs", ["5m", "10m", "15m", "20m", "30m"]), sound = ls("okx_sound", true);
@@ -927,7 +929,7 @@ function renderSet() {
       ${X.name === "bybit" ? `<p class="xs amb">Bybit.com may not serve accounts in the Netherlands (Bybit EU is separate and has other fees). Public prices still load if your network allows it.</p>` : ""}</div>
     <div class="card"><h2>Watchlist</h2><div class="chips">${watch.map(p => `<span class="chip">${esc(p)}${X.spotId(p) ? "" : ` <span class="xs amb">not on ${X.label}</span>`} <a data-rm="${esc(p)}" style="cursor:pointer;margin-left:.3rem">✕</a></span>`).join("")}</div>
       <div class="addrow"><input class="f" id="wAdd" placeholder="Add coin, e.g. AVAX" autocapitalize="characters"><button class="btn" id="wBtn">Add</button></div><span class="sm red" id="wErr"></span>
-      <p class="xs mut">5-8 liquid coins keeps it fast. Coins the selected exchange doesn't list are hidden there. The box scans the watchlist inside your alert code below.</p></div>
+      <p class="xs mut">Established majors only (BTC, ETH, SOL, XRP, LINK…). Meme coins stay on the FOMO desk. Coins the selected exchange doesn't list are hidden. The box scans this watchlist.</p></div>
     <div class="card"><h2>Phone alerts · work with the app closed</h2>${alertsHtml()}</div>
     <div class="card"><h2>In-app alerts · while the app is open</h2><p class="sm mut" style="margin-top:0">Sound and a notification when a new signal appears on these day timeframes (swing and contracts always):</p>
       <div class="chips">${DAY_TFS.map(t => `<button class="chip ${inAppTfs.includes(t) ? "on" : ""}" data-iat="${t}">${t}</button>`).join("")}</div>
@@ -943,6 +945,7 @@ function renderSet() {
   el.querySelectorAll("[data-rm]").forEach(a => a.onclick = () => { if (watch.length <= 1) return; watch = watch.filter(p => p !== a.dataset.rm); lsSet("okx_watch", watch); if (!watch.includes(sel)) sel = watch[0]; refreshCode(); });
   $("wBtn").onclick = async () => { const c = normCoin($("wAdd").value), err = m => $("wErr").textContent = m;
     if (!c) return err("Coin like AVAX."); if (watch.includes(c)) return err("Already on the list."); if (watch.length >= 12) return err("12 coins max.");
+    if (MEME_COINS.has(c)) return err(`${c} is a meme coin — use the FOMO desk. OKX Desk is for established coins only.`);
     if (!X.spotId(c)) return err(`${X.label} has no ${c}/${X.quote} spot market.`);
     watch.push(c); lsSet("okx_watch", watch); refreshCode(); };
   el.querySelectorAll("[data-iat]").forEach(b => b.onclick = () => { const t = b.dataset.iat; inAppTfs = inAppTfs.includes(t) ? inAppTfs.filter(x => x !== t) : [...inAppTfs, t]; lsSet("okx_inapp_tfs", inAppTfs); renderSet(); });
@@ -1256,10 +1259,11 @@ function renderLog() {
       const rows = paperRowsFor(reg);
       body += `<div class="tpanel"><h3>Box PAPER alerts · ${esc(reg)} <span class="badge b-paper">PAPER · NO ORDERS</span></h3>
         <div class="scroll"><table class="tt"><tr><th>When</th><th>Coin</th><th>TF</th><th class="n">Entry</th><th>Result</th><th>Tag</th></tr>
-        ${rows.length ? rows.map(a => `<tr><td class="mono">${tmd(a.ts * 1000)}</td><td>${esc(a.pair)}</td><td>${esc(a.tf)}</td>
+        ${rows.length ? rows.map(a => { const gone = (S.feed && S.feed.watchlist && !S.feed.watchlist.includes(a.pair)) || MEME_COINS.has(a.pair);
+          return `<tr><td class="mono">${tmd(a.ts * 1000)}</td><td>${esc(a.pair)}${gone ? ` <span class="pill p-amb">REMOVED</span>` : ""}</td><td>${esc(a.tf)}</td>
           <td class="n">${px(a.entry)}</td>
           <td class="sm ${a.status === "open" ? "" : a.net >= 0 ? "grn" : "red"}">${a.status === "open" ? "open" : esc(a.status) + " " + pct(a.net, 2)}</td>
-          <td class="xs mut">${a.regime_backfilled ? "backfilled" : "live"}</td></tr>`).join("")
+          <td class="xs mut">${a.regime_backfilled ? "backfilled" : "live"}${gone ? " · off watchlist" : ""}</td></tr>`; }).join("")
           : `<tr><td colspan="6" class="mut">No box paper alerts in ${esc(reg)}.</td></tr>`}
         </table></div></div>`;
     } else if (logShow === "study") {
@@ -1731,7 +1735,7 @@ function renderDash() {
         <h2 style="margin:0;font:700 1rem ui-monospace,Menlo,monospace">${esc(B.label)}</h2>
         <span class="badge b-paper">${esc(B.cut)}</span></div>
       ${deskNavHTML(dashBand)}
-      <div class="dcards">${coins.length ? coins.map(coinCardHTML).join("") : `<p class="mono mut">No watchlist coin in this band right now.</p>`}</div>
+      <div class="dcards">${coins.length ? coins.map(coinCardHTML).join("") : `<p class="mono mut">No established watchlist coin in this band right now${dashBand === "low" ? " (Low &lt; $1 is empty: meme coins like DOGE stay on the FOMO desk)" : ""}.</p>`}</div>
       ${scrollingLogHTML()}
       <p class="mono mut" style="margin:.4rem 0 0">${srcLine("sparkline = last 48 closed 1H candles").replace(/<\/?p[^>]*>/g, "")}</p>` + termClose;
     bindDashNav(el); return;
